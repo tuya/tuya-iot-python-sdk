@@ -120,5 +120,5 @@ class TuyaOpenAPI():
     def put(self, path, params=None):
         return self.request('PUT', path, None, params)
 
-    def delete(self, path):
-        return self.request('DELETE', path, None, None)
+    def delete(self, path, params=None):
+        return self.request('DELETE', path, params, None)

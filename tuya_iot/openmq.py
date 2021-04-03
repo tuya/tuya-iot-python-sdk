@@ -32,8 +32,7 @@ class TuyaMQConfig:
 class TuyaOpenMQ(threading.Thread):
   openapi = None
   callback = None
-  on_connect = None
-  on_message = None
+  message_listeners = set()
 
   def __init__(self, openapi):
     threading.Thread.__init__(self)
@@ -58,8 +57,6 @@ class TuyaOpenMQ(threading.Thread):
 
   def _on_connect(self, mqttc, obj, flags, rc):
     print("[tuya-openmq] _on_connect")
-    if self.on_connect != None:
-      self.on_connect()
 
   def _on_message(self, mqttc, obj, msg):
     msgDict = json.loads(msg.payload.decode('utf8'))
@@ -80,8 +77,8 @@ class TuyaOpenMQ(threading.Thread):
     msgDict['data'] = self._decode_mq_message(msgDict['data'], self.mqConfig.password)
     print("[tuya-openmq] _on_message: {}".format(msgDict))
 
-    if self.on_message != None:
-      self.on_message(msgDict)
+    for listener in self.message_listeners:
+      listener(msgDict)
 
   def _on_subscribe(self, mqttc, obj, mid, granted_qos):
     # print("[tuya-openmq] _on_subscribe: {}".format(mid))
@@ -135,3 +132,9 @@ class TuyaOpenMQ(threading.Thread):
   # def unsubscribe_device(self, device_id):
   #   topic = self.mqConfig.sink_topic['device'].format(device_id=device_id)
   #   self.unsubscribe(topic)
+
+  def add_message_listener(self, listener):
+    self.message_listeners.add(listener)
+
+  def remove_message_listener(self, listener):
+    self.message_listeners.remove(listener)

@@ -15,4 +15,4 @@ def on_message(msg):
 
 openmq = TuyaOpenMQ(openapi)
 openmq.start()
-openmq.on_message = on_message
+openmq.add_message_listener(on_message)
