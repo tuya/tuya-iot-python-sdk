@@ -4,4 +4,4 @@
 from .openapi import TuyaOpenAPI
 from .openmq import TuyaOpenMQ
 from .asset import TuyaAssetManager
-from .device import TuyaDeviceManager
+from .device import TuyaDeviceManager, TuyaDevice

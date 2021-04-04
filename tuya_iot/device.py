@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
+import json
+from types import SimpleNamespace
+from typing import Dict
+
 PROTOCOL_DEVICE_REPORT = 4
 PROTOCOL_OTHER = 20
 
@@ -12,10 +16,36 @@ BIZCODE_BIND_USER = 'bindUser'
 BIZCODE_DELETE = 'delete'
 BIZCODE_P2P_SIGNAL = 'p2pSignal'
 
+
+class TuyaDevice(SimpleNamespace):
+  id: str
+  name: str
+  local_key: str
+  category: str
+  product_id: str
+  product_name: str
+  sub: bool
+  uuid: str
+  asset_id: str
+  online: bool
+  icon: str
+  ip: str
+  time_zone: str
+  active_time: int
+  create_time: int
+  update_time: int
+
+  status: dict = {}
+  function: dict = {}
+
+  def __eq__(self, other):
+    return self.id == other.id
+
+
 class TuyaDeviceManager:
 
-  deviceInfoMap = {}
-  deviceStatusMap = {}
+  deviceMap: Dict[str, TuyaDevice] = {}
+
   categoryFunctionMap = {}
 
   def __init__(self, api, mq):
@@ -37,55 +67,73 @@ class TuyaDeviceManager:
       pass
 
   def _onDeviceReport(self, devId, status):
-    oldStatus = self.deviceStatusMap.get(devId, {})
-    newStatus = oldStatus.copy()
+    device = self.deviceMap.get(devId, None)
+    if not device:
+      return
+
     for item in status:
       code = item['code']
       value = item['value']
-      newStatus[code] = value
-    self.deviceStatusMap[devId] = newStatus
+      device.status[code] = value
 
   def _onDeviceOther(self, devId, bizCode, data):
-    # TODO
-    pass
+    device = self.deviceMap.get(devId, None)
+    if not device:
+      return
+
+    if bizCode == BIZCODE_ONLINE:
+      device.online = True
+    elif bizCode == BIZCODE_OFFLINE:
+      device.online = False
+    elif bizCode == BIZCODE_NAME_UPDATE:
+      device.name = data['name']
+    elif bizCode == BIZCODE_DPNAME_UPDATE:
+      pass
+    elif bizCode == BIZCODE_BIND_USER:
+      pass
+    elif bizCode == BIZCODE_DELETE:
+      del self.deviceMap[devId]
+    elif bizCode == BIZCODE_P2P_SIGNAL:
+      pass
+    else:
+      pass
+
 
   ##############################
   # Memory Cache
 
   def updateDeviceCaches(self, devIds):
-    self._updateDeviceListStatusCache(devIds)
     self._updateDeviceListInfoCache(devIds)
+    self._updateDeviceListStatusCache(devIds)
     self._updateCategoryFunctionCache()
+
+  def _updateDeviceListInfoCache(self, devIds):
+    response = self.getDeviceListInfo(devIds)
+    result = response.get('result', {})
+    for item in result.get('list', []):
+      devId = item['id']
+      self.deviceMap[devId] = TuyaDevice(**item)
 
   def _updateDeviceListStatusCache(self, devIds):
     response = self.getDeviceListStatus(devIds)
     for item in response.get('result', []):
       devId = item['id']
-      devStatus = {}
       for status in item['status']:
         code = status['code']
         value = status['value']
-        devStatus[code] = value
-      self.deviceStatusMap[devId] = devStatus
-
-  def _updateDeviceListInfoCache(self, devIds):
-    response = self.getDeviceListInfo(devIds)
-    for item in response.get('result', {}).get('list', []):
-      devId = item['id']
-      self.deviceInfoMap[devId] = item
+        device = self.deviceMap[devId]
+        device.status[code] = value
 
   def _updateCategoryFunctionCache(self):
     categoryIds = set()
-    for (devId, devInfo) in self.deviceInfoMap.items():
-      category = devInfo.get('category', '')
-      if category != '':
-        categoryIds.add(category)
+    for (devId, device) in self.deviceMap.items():
+      if device.category != '':
+        categoryIds.add(device.category)
     for category in categoryIds:
       response = self.getCategoryFunctions(category)
       result = response.get('result', {})
       functions = result['functions']
       self.categoryFunctionMap[category] = functions
-
 
   ##############################
   # IoT Base
@@ -134,7 +182,7 @@ class TuyaDeviceManager:
     return self.api.get('/v1.0/iot-03/categories/{}/functions'.format(categoryId))
 
   def publishCommands(self, devId, commands):
-    return self.api.post('/v1.0/iot-03/devices/{}/commands'.format(devId, {'commands': commands}))
+    return self.api.post('/v1.0/iot-03/devices/{}/commands'.format(devId), {'commands': commands})
 
   # Device Register
 

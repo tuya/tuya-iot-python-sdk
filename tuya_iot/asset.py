@@ -33,4 +33,7 @@ class TuyaAssetManager:
   def getAssetInfo(self, assetId):
     return self.api.get('/v1.0/iot-02/assets/{}'.format(assetId))
 
+  def getAssetList(self, parent_asset_id = ''):
+    return self.api.get('/v1.0/iot-03/users/assets', {'parent_asset_id': parent_asset_id, 'page_no': 0, 'page_size': 100})
+
   # TODO
