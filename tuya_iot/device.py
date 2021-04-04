@@ -132,8 +132,13 @@ class TuyaDeviceManager:
     for category in categoryIds:
       response = self.getCategoryFunctions(category)
       result = response.get('result', {})
-      functions = result['functions']
-      self.categoryFunctionMap[category] = functions
+      functionMap = {}
+      for function in result['functions']:
+        code = function['code']
+        functionMap[code] = function
+      self.categoryFunctionMap[category] = functionMap
+    for (devId, device) in self.deviceMap.items():
+      device.function = self.categoryFunctionMap[device.category]
 
   ##############################
   # IoT Base
