@@ -7,6 +7,8 @@ import time
 import json
 import requests
 
+TUYA_ERROR_CODE_TOKEN_INVALID = 1010
+
 class TuyaTokenInfo:
 
     accessToken = ""
@@ -30,7 +32,7 @@ class TuyaOpenAPI():
     accessID = ''
     accessKey = ''
     lang = ''
-    tokenInfo = TuyaTokenInfo()
+    tokenInfo: TuyaTokenInfo = None
 
     def __init__(self, endpoint, accessID, accessKey, lang='en'):
         self.session = requests.session()
@@ -40,7 +42,6 @@ class TuyaOpenAPI():
         self.accessKey = accessKey
         self.lang = lang
 
-        self.tokenInfo = TuyaTokenInfo()
 
     # https://developer.tuya.com/docs/iot/open-api/api-reference/singnature?id=Ka43a5mtx1gsc
     def _calculate_sign(self, client_id, secret, access_token='', t=0):
@@ -55,17 +56,18 @@ class TuyaOpenAPI():
         if self.isLogin() == False:
             return
 
-        if path in ['/v1.0/token']:
+        if path.startswith('/v1.0/token'):
             return
 
         # should use refresh token?
         now = int(time.time() * 1000)
         expired_time = self.tokenInfo.expireTime
 
-        if expired_time - now > 60 * 1000:  # 1min
+        if expired_time - 60 * 1000 > now: # 1min
             return
 
-        response = self.get('/v1.0/token',  {'grant_type': 1})
+        self.tokenInfo.accessToken = ''
+        response = self.get('/v1.0/token/{}'.format(self.tokenInfo.refreshToken))
         self.tokenInfo = TuyaTokenInfo(response)
 
     def login(self, username, password):
@@ -77,13 +79,15 @@ class TuyaOpenAPI():
         return response
 
     def isLogin(self):
-        return len(self.tokenInfo.accessToken) > 0
+        return self.tokenInfo != None and len(self.tokenInfo.accessToken) > 0
 
     def request(self, method, path, params=None, body=None):
 
         self._refresh_access_token_if_need(path)
 
-        accessToken = self.tokenInfo.accessToken
+        accessToken = ''
+        if self.tokenInfo:
+            accessToken = self.tokenInfo.accessToken
 
         sign, t = self._calculate_sign(
             self.accessID, self.accessKey, accessToken)
@@ -109,6 +113,11 @@ class TuyaOpenAPI():
         result = response.json()
         print('[tuya-openapi] Response: {}'.format(json.dumps(result,
                                                               ensure_ascii=False, indent=2)))
+
+        if result.get('code', -1) == TUYA_ERROR_CODE_TOKEN_INVALID:
+            self.tokenInfo = None
+            # TODO send event
+
         return result
 
     def get(self, path, params=None):
