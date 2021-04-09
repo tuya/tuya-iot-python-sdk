@@ -70,7 +70,7 @@ class TuyaOpenAPI():
 
     def login(self, username, password):
         response = self.post('/v1.0/iot-03/users/login', {
-            'user_name': username,
+            'username': username,
             'password': hashlib.sha256(password.encode('utf8')).hexdigest().lower(),
         })
         self.tokenInfo = TuyaTokenInfo(response)
