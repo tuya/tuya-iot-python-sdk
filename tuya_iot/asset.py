@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-class TuyaAssetManager:
+from typing import Any, Dict, List
 
-  def __init__(self, api):
+from .openapi import TuyaOpenAPI
+
+class TuyaAssetManager:
+  api: TuyaOpenAPI
+
+  def __init__(self, api: TuyaOpenAPI):
     self.api = api
 
   ##############################
   # Asset Management
   # https://wiki.tuya-inc.com:7799/pages/viewpage.action?pageId=89526663
 
-  def getDeviceList(self, assetId):
+  def getDeviceList(self, assetId: str) -> List[str]:
     devIdList = []
 
     hasNext = True
@@ -30,10 +35,10 @@ class TuyaAssetManager:
 
     return devIdList
 
-  def getAssetInfo(self, assetId):
+  def getAssetInfo(self, assetId: str) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-02/assets/{}'.format(assetId))
 
-  def getAssetList(self, parent_asset_id = ''):
+  def getAssetList(self, parent_asset_id: str = '') -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/users/assets', {'parent_asset_id': parent_asset_id, 'page_no': 0, 'page_size': 100})
 
   # TODO

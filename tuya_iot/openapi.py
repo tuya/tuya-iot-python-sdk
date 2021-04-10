@@ -7,16 +7,18 @@ import time
 import json
 import requests
 
+from typing import Any, Dict, Optional
+
 TUYA_ERROR_CODE_TOKEN_INVALID = 1010
 
 class TuyaTokenInfo:
 
-    accessToken = ""
-    expireTime = 0
-    uid = ""
-    refreshToken = ""
+    accessToken: str = ""
+    expireTime: int = 0
+    uid: str = ""
+    refreshToken: str = ""
 
-    def __init__(self, tokenResponse={}):
+    def __init__(self, tokenResponse: Dict[str, Any] = {}):
         result = tokenResponse.get('result', {})
 
         self.expireTime = tokenResponse.get(
@@ -27,14 +29,14 @@ class TuyaTokenInfo:
 
 
 class TuyaOpenAPI():
-    session = requests.session()
-    endpoint = ''
-    accessID = ''
-    accessKey = ''
-    lang = ''
+    session: requests.Session = requests.session()
+    endpoint: str = ''
+    accessID: str = ''
+    accessKey: str = ''
+    lang: str = ''
     tokenInfo: TuyaTokenInfo = None
 
-    def __init__(self, endpoint, accessID, accessKey, lang='en'):
+    def __init__(self, endpoint: str, accessID: str, accessKey: str, lang: str = 'en'):
         self.session = requests.session()
 
         self.endpoint = endpoint
@@ -44,7 +46,7 @@ class TuyaOpenAPI():
 
 
     # https://developer.tuya.com/docs/iot/open-api/api-reference/singnature?id=Ka43a5mtx1gsc
-    def _calculate_sign(self, client_id, secret, access_token='', t=0):
+    def _calculate_sign(self, client_id: str, secret: str, access_token: str ='', t: int = 0) -> (str, int):
         if (t == 0):
             t = int(time.time() * 1000)
         message = client_id + access_token + str(t)
@@ -52,7 +54,7 @@ class TuyaOpenAPI():
             'utf8'), digestmod=hashlib.sha256).hexdigest().upper()
         return sign, t
 
-    def _refresh_access_token_if_need(self, path):
+    def _refresh_access_token_if_need(self, path: str):
         if self.isLogin() == False:
             return
 
@@ -70,7 +72,7 @@ class TuyaOpenAPI():
         response = self.get('/v1.0/token/{}'.format(self.tokenInfo.refreshToken))
         self.tokenInfo = TuyaTokenInfo(response)
 
-    def login(self, username, password):
+    def login(self, username: str, password: str) -> Dict[str, Any]:
         response = self.post('/v1.0/iot-03/users/login', {
             'username': username,
             'password': hashlib.sha256(password.encode('utf8')).hexdigest().lower(),
@@ -78,10 +80,10 @@ class TuyaOpenAPI():
         self.tokenInfo = TuyaTokenInfo(response)
         return response
 
-    def isLogin(self):
+    def isLogin(self) -> bool:
         return self.tokenInfo != None and len(self.tokenInfo.accessToken) > 0
 
-    def request(self, method, path, params=None, body=None):
+    def request(self, method: str, path: str, params: Optional[Dict[str, Any]] = None, body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
 
         self._refresh_access_token_if_need(path)
 
@@ -120,14 +122,14 @@ class TuyaOpenAPI():
 
         return result
 
-    def get(self, path, params=None):
+    def get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         return self.request('GET', path, params, None)
 
-    def post(self, path, params=None):
+    def post(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         return self.request('POST', path, None, params)
 
-    def put(self, path, params=None):
+    def put(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         return self.request('PUT', path, None, params)
 
-    def delete(self, path, params=None):
+    def delete(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         return self.request('DELETE', path, params, None)

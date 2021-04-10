@@ -7,6 +7,8 @@ import json
 import time
 import threading
 import uuid
+
+from typing import Any, Callable, Dict
 from urllib.parse import urlsplit
 from paho.mqtt import client as mqtt
 from Crypto.Cipher import AES
@@ -24,7 +26,7 @@ class TuyaMQConfig:
   sink_topic = {}
   expireTime = 0
 
-  def __init__(self, mqConfigResponse = {}):
+  def __init__(self, mqConfigResponse: Dict[str, Any] = {}):
     result = mqConfigResponse.get('result', {})
 
     self.url = result.get('url', '')
@@ -41,9 +43,9 @@ class TuyaOpenMQ(threading.Thread):
   client: mqtt.Client = None
   message_listeners = set()
 
-  def __init__(self, openapi: TuyaOpenAPI):
+  def __init__(self, api: TuyaOpenAPI):
     threading.Thread.__init__(self)
-    self.api = openapi
+    self.api = api
 
   def _get_mqtt_config(self) -> TuyaMQConfig:
     response = self.api.post('/v1.0/open-hub/access/config', {
@@ -58,7 +60,7 @@ class TuyaOpenMQ(threading.Thread):
 
     return TuyaMQConfig(response)
 
-  def _decode_mq_message(self, b64msg: str, password: str) -> dict:
+  def _decode_mq_message(self, b64msg: str, password: str) -> Dict[str, Any]:
     password = password[8:24]
     cipher = AES.new(password.encode("utf8"), AES.MODE_ECB)
     msg = cipher.decrypt(base64.b64decode(b64msg))
@@ -66,10 +68,10 @@ class TuyaOpenMQ(threading.Thread):
     msg = msg[:-padding_bytes]
     return json.loads(msg)
 
-  def _on_connect(self, mqttc, userData, flags, rc):
+  def _on_connect(self, mqttc: mqtt.Client, userData: Any, flags, rc):
     print("[tuya-openmq] connected")
 
-  def _on_message(self, mqttc, userData, msg):
+  def _on_message(self, mqttc: mqtt.Client, userData: Any, msg: mqtt.MQTTMessage):
     msgDict = json.loads(msg.payload.decode('utf8'))
 
     topic = msg.topic
@@ -92,11 +94,11 @@ class TuyaOpenMQ(threading.Thread):
     for listener in self.message_listeners:
       listener(msgDict)
 
-  def _on_subscribe(self, mqttc, userData, mid, granted_qos):
+  def _on_subscribe(self, mqttc: mqtt.Client, userData: Any, mid, granted_qos):
     # print("[tuya-openmq] _on_subscribe: {}".format(mid))
     pass
 
-  def _on_log(self, mqttc, userData, level, string):
+  def _on_log(self, mqttc: mqtt.Client, userData: Any, level, string):
     # print("[tuya-openmq] _on_log: {}".format(string))
     pass
 
@@ -147,8 +149,8 @@ class TuyaOpenMQ(threading.Thread):
     self.client.disconnect()
     super().stop()
 
-  def add_message_listener(self, listener):
+  def add_message_listener(self, listener: Callable[[str], None]):
     self.message_listeners.add(listener)
 
-  def remove_message_listener(self, listener):
+  def remove_message_listener(self, listener: Callable[[str], None]):
     self.message_listeners.remove(listener)

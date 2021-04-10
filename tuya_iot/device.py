@@ -3,7 +3,10 @@
 
 import json
 from types import SimpleNamespace
-from typing import Dict
+from typing import Any, Dict, List
+
+from .openapi import TuyaOpenAPI
+from .openmq import TuyaOpenMQ
 
 PROTOCOL_DEVICE_REPORT = 4
 PROTOCOL_OTHER = 20
@@ -53,9 +56,9 @@ class TuyaDeviceManager:
 
   deviceMap: Dict[str, TuyaDevice] = {}
 
-  categoryFunctionMap = {}
+  categoryFunctionMap: Dict[str, TuyaDeviceFunction] = {}
 
-  def __init__(self, api, mq):
+  def __init__(self, api: TuyaOpenAPI, mq: TuyaOpenMQ):
     self.api = api
     self.mq = mq
     mq.add_message_listener(self._onMessage)
@@ -63,7 +66,7 @@ class TuyaDeviceManager:
   def __del__(self):
     self.mq.remove_message_listener(self._onMessage)
 
-  def _onMessage(self, msg):
+  def _onMessage(self, msg: str):
     protocol = msg.get('protocol', 0)
     data = msg.get('data', {})
     if protocol == PROTOCOL_DEVICE_REPORT:
@@ -73,7 +76,7 @@ class TuyaDeviceManager:
     else:
       pass
 
-  def _onDeviceReport(self, devId, status):
+  def _onDeviceReport(self, devId: str, status: str):
     device = self.deviceMap.get(devId, None)
     if not device:
       return
@@ -83,7 +86,7 @@ class TuyaDeviceManager:
       value = item['value']
       device.status[code] = value
 
-  def _onDeviceOther(self, devId, bizCode, data):
+  def _onDeviceOther(self, devId: str, bizCode: str, data: Dict[str, Any]):
     device = self.deviceMap.get(devId, None)
     if not device:
       return
@@ -109,19 +112,19 @@ class TuyaDeviceManager:
   ##############################
   # Memory Cache
 
-  def updateDeviceCaches(self, devIds):
+  def updateDeviceCaches(self, devIds: List[str]):
     self._updateDeviceListInfoCache(devIds)
     self._updateDeviceListStatusCache(devIds)
     self._updateCategoryFunctionCache()
 
-  def _updateDeviceListInfoCache(self, devIds):
+  def _updateDeviceListInfoCache(self, devIds: List[str]):
     response = self.getDeviceListInfo(devIds)
     result = response.get('result', {})
     for item in result.get('list', []):
       devId = item['id']
       self.deviceMap[devId] = TuyaDevice(**item)
 
-  def _updateDeviceListStatusCache(self, devIds):
+  def _updateDeviceListStatusCache(self, devIds: List[str]):
     response = self.getDeviceListStatus(devIds)
     for item in response.get('result', []):
       devId = item['id']
@@ -153,47 +156,47 @@ class TuyaDeviceManager:
 
   # Device Management
 
-  def getDeviceInfo(self, devId):
+  def getDeviceInfo(self, devId: str) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/devices/{}'.format(devId))
 
-  def getDeviceListInfo(self, devIds):
+  def getDeviceListInfo(self, devIds: List[str]) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/devices', {'device_ids': ','.join(devIds)})
 
-  def updateDeviceInfo(self, devId, info):
+  def updateDeviceInfo(self, devId: str, info) -> Dict[str, Any]:
     return self.api.put('/v1.0/iot-03/devices/{}'.format(devId), info)
 
-  def removeDevice(self, devId):
+  def removeDevice(self, devId: str) -> Dict[str, Any]:
     return self.api.delete('/v1.0/iot-03/devices/{}'.format(devId))
 
-  def removeDeviceList(self, devIds):
+  def removeDeviceList(self, devIds: List[str]) -> Dict[str, Any]:
     return self.api.delete('/v1.0/iot-03/devices', {'device_ids': ','.join(devIds)})
 
-  def getFactoryInfo(self, devId):
+  def getFactoryInfo(self, devId: str) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/devices/factory-infos', devId)
 
-  def factoryReset(self, devId):
+  def factoryReset(self, devId: str) -> Dict[str, Any]:
     return self.api.delete('/v1.0/iot-03/devices/{}/actions/reset'.format(devId))
 
   # Device Status
 
-  def getDeviceStatus(self, devId):
+  def getDeviceStatus(self, devId: str) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/devices/{}/status'.format(devId))
 
-  def getDeviceListStatus(self, devIds):
+  def getDeviceListStatus(self, devIds: List[str]) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/devices/status', {'device_ids': ','.join(devIds)})
 
   # Device Control
 
-  def getDeviceSpecification(self, devId):
+  def getDeviceSpecification(self, devId: str) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/devices/{}/specification'.format(devId))
 
-  def getDeviceFunctions(self, devId):
+  def getDeviceFunctions(self, devId: str) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/devices/{}/functions'.format(devId))
 
-  def getCategoryFunctions(self, categoryId):
+  def getCategoryFunctions(self, categoryId: str) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/categories/{}/functions'.format(categoryId))
 
-  def publishCommands(self, devId, commands):
+  def publishCommands(self, devId: str, commands: List[str]) -> Dict[str, Any]:
     return self.api.post('/v1.0/iot-03/devices/{}/commands'.format(devId), {'commands': commands})
 
   # Device Register
