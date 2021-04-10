@@ -17,6 +17,13 @@ BIZCODE_DELETE = 'delete'
 BIZCODE_P2P_SIGNAL = 'p2pSignal'
 
 
+class TuyaDeviceFunction(SimpleNamespace):
+  code: str
+  desc: str
+  name: str
+  type: str
+  values: Dict[str, Any]
+
 class TuyaDevice(SimpleNamespace):
   id: str
   name: str
@@ -35,8 +42,8 @@ class TuyaDevice(SimpleNamespace):
   create_time: int
   update_time: int
 
-  status: dict = {}
-  function: dict = {}
+  status: Dict[str, Dict[str, Any]] = {}
+  function: Dict[str, TuyaDeviceFunction] = {}
 
   def __eq__(self, other):
     return self.id == other.id
@@ -135,7 +142,7 @@ class TuyaDeviceManager:
       functionMap = {}
       for function in result['functions']:
         code = function['code']
-        functionMap[code] = function
+        functionMap[code] = TuyaDeviceFunction(**function)
       self.categoryFunctionMap[category] = functionMap
     for (devId, device) in self.deviceMap.items():
       device.function = self.categoryFunctionMap[device.category]
