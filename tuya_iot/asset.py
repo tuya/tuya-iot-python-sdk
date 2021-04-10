@@ -13,7 +13,7 @@ class TuyaAssetManager:
 
   ##############################
   # Asset Management
-  # https://wiki.tuya-inc.com:7799/pages/viewpage.action?pageId=89526663
+  # https://developer.tuya.com/docs/cloud/industrial-general-asset-management/4872453fec?id=Kag2yom602i40
 
   def getDeviceList(self, assetId: str) -> List[str]:
     devIdList = []

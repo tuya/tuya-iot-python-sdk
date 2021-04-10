@@ -151,10 +151,10 @@ class TuyaDeviceManager:
       device.function = self.categoryFunctionMap[device.category]
 
   ##############################
-  # IoT Base
-  # https://wiki.tuya-inc.com:7799/pages/viewpage.action?pageId=89526663
+  # OpenAPI
 
   # Device Management
+  # https://developer.tuya.com/docs/cloud/industrial-general-device-management/2fed20dbd9?id=Kag2t5om665oi
 
   def getDeviceInfo(self, devId: str) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/devices/{}'.format(devId))
@@ -178,6 +178,7 @@ class TuyaDeviceManager:
     return self.api.delete('/v1.0/iot-03/devices/{}/actions/reset'.format(devId))
 
   # Device Status
+  # https://developer.tuya.com/docs/cloud/industrial-general-device-status-query/f8108a55e3?id=Kag2t60ii54jf
 
   def getDeviceStatus(self, devId: str) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/devices/{}/status'.format(devId))
@@ -186,6 +187,7 @@ class TuyaDeviceManager:
     return self.api.get('/v1.0/iot-03/devices/status', {'device_ids': ','.join(devIds)})
 
   # Device Control
+  # https://developer.tuya.com/docs/cloud/industrial-general-device-control/5d2e6fbe8e?id=Kag2t6n3ony2c
 
   def getDeviceSpecification(self, devId: str) -> Dict[str, Any]:
     return self.api.get('/v1.0/iot-03/devices/{}/specification'.format(devId))
@@ -199,7 +201,8 @@ class TuyaDeviceManager:
   def publishCommands(self, devId: str, commands: List[str]) -> Dict[str, Any]:
     return self.api.post('/v1.0/iot-03/devices/{}/commands'.format(devId), {'commands': commands})
 
-  # Device Register
+  # Device Registration
+  # https://developer.tuya.com/en/docs/cloud/industrial-general-device-registration/41bd0ed112?id=Kag2t66tjhp2i
 
   # TODO
 
