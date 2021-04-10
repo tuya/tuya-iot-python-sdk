@@ -5,7 +5,7 @@
 from setuptools import setup, find_packages, Extension
 import glob
 
-VERSION = '0.1.10'
+VERSION = '0.1.23'
 
 tests_require = []
 

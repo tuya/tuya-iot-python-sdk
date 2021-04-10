@@ -5,7 +5,16 @@ from typing import Any, Dict, List
 
 from .openapi import TuyaOpenAPI
 
+
 class TuyaAssetManager:
+  """Asset Manager
+
+  Attributes:
+    api: tuya openapi
+
+
+  """
+
   api: TuyaOpenAPI
 
   def __init__(self, api: TuyaOpenAPI):
@@ -16,6 +25,19 @@ class TuyaAssetManager:
   # https://developer.tuya.com/docs/cloud/industrial-general-asset-management/4872453fec?id=Kag2yom602i40
 
   def getDeviceList(self, assetId: str) -> List[str]:
+    """Get devices by assetId
+
+    Args:
+      assetId(str): asset id
+
+    Returns:
+      A list of device id. For
+      example:
+      
+      [1111,2222]
+    
+    """
+    
     devIdList = []
 
     hasNext = True

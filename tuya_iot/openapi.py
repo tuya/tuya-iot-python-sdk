@@ -12,7 +12,15 @@ from typing import Any, Dict, Optional
 TUYA_ERROR_CODE_TOKEN_INVALID = 1010
 
 class TuyaTokenInfo:
+    """
+    Tuya token info
 
+    Attributes:
+        accessToken: Access token.
+        expireTime: Valid period in seconds.
+        refreshToken: Refresh token.
+        uid: Tuya user ID.
+    """
     accessToken: str = ""
     expireTime: int = 0
     uid: str = ""
@@ -29,6 +37,13 @@ class TuyaTokenInfo:
 
 
 class TuyaOpenAPI():
+    """
+    Open Api
+
+    Typical usage example:
+
+    openapi = TuyaOpenAPI(ENDPOINT, ACCESS_ID, ACCESS_KEY)
+    """
     session: requests.Session = requests.session()
     endpoint: str = ''
     accessID: str = ''
@@ -73,6 +88,16 @@ class TuyaOpenAPI():
         self.tokenInfo = TuyaTokenInfo(response)
 
     def login(self, username: str, password: str) -> Dict[str, Any]:
+        """
+        user login
+
+        Args:
+            username (str): user name
+            password (str): user password
+
+        Returns:
+            response: login response
+        """
         response = self.post('/v1.0/iot-03/users/login', {
             'username': username,
             'password': hashlib.sha256(password.encode('utf8')).hexdigest().lower(),
@@ -123,13 +148,53 @@ class TuyaOpenAPI():
         return result
 
     def get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Http Get
+        Requests the server to return specified resources.
+
+        Args:
+            path (str): api path
+            params (map): request parameter
+
+        Returns:
+            response: response body
+        """
         return self.request('GET', path, params, None)
 
     def post(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Http Post
+        Requests the server to update specified resources.
+
+        Args:
+            path (str): api path
+            params (map): request body
+
+        Returns:
+            response: response body
+        """
         return self.request('POST', path, None, params)
 
     def put(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Http Put
+        Requires the server to perform specified operations.
+
+        Args:
+            path (str): api path
+            params (map): request body
+
+        Returns:
+            response: response body
+        """
         return self.request('PUT', path, None, params)
 
     def delete(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Http Delete
+        Requires the server to delete specified resources.
+
+        Args:
+            path (str): api path
+            params (map): request param
+
+        Returns:
+            response: response body
+        """
         return self.request('DELETE', path, params, None)

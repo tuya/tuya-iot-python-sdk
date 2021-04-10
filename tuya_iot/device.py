@@ -27,7 +27,34 @@ class TuyaDeviceFunction(SimpleNamespace):
   type: str
   values: Dict[str, Any]
 
+
 class TuyaDevice(SimpleNamespace):
+  """
+  Tuya Device
+
+  https://developer.tuya.com/en/docs/iot/open-api/api-reference/smart-home-devices-management/device-management?id=K9g6rfntdz78a#title-5-Return%20parameter
+
+  Attributes:
+        id: Device id
+        name: Device name
+        local_key: Key
+        category: Product category
+        product_id: Product ID
+        product_name: Product name
+        sub: Determine whether it is a sub-device, true-> yes; false-> no
+        uuid: The unique device identifier
+        asset_id: asset id of the device
+        online: Online status of the device
+        icon: Device icon
+        ip: Device IP
+        time_zone: device time zone
+        active_time: The last pairing time of the device
+        create_time: The first network pairing time of the device
+        update_time: The update time of device status
+
+        status: Functional status of the device
+  """
+
   id: str
   name: str
   local_key: str
@@ -53,6 +80,11 @@ class TuyaDevice(SimpleNamespace):
 
 
 class TuyaDeviceManager:
+  """Tuya Device Manager
+
+  This Manager support device control, including getting device status, specifications, the latest statuses, and sending commands
+
+  """
 
   deviceMap: Dict[str, TuyaDevice] = {}
 
@@ -113,6 +145,14 @@ class TuyaDeviceManager:
   # Memory Cache
 
   def updateDeviceCaches(self, devIds: List[str]):
+    """update devices status in cache
+
+    Update devices info, devices status
+
+    Args:
+      devIds(str): devices' id join by ',', like '11111,22222,33333'
+    """
+    
     self._updateDeviceListInfoCache(devIds)
     self._updateDeviceListStatusCache(devIds)
     self._updateCategoryFunctionCache()
@@ -157,48 +197,164 @@ class TuyaDeviceManager:
   # https://developer.tuya.com/docs/cloud/industrial-general-device-management/2fed20dbd9?id=Kag2t5om665oi
 
   def getDeviceInfo(self, devId: str) -> Dict[str, Any]:
-    return self.api.get('/v1.0/iot-03/devices/{}'.format(devId))
+      """Get device info
+
+      Args:
+        devId(str): device id
+      """
+      return self.api.get('/v1.0/iot-03/devices/{}'.format(devId))
 
   def getDeviceListInfo(self, devIds: List[str]) -> Dict[str, Any]:
-    return self.api.get('/v1.0/iot-03/devices', {'device_ids': ','.join(devIds)})
+      """Get devices info
+
+      Args:
+        devId(list): device id list
+
+      Returns:
+          response: response body
+      
+      """
+      return self.api.get('/v1.0/iot-03/devices', {'device_ids': ','.join(devIds)})
 
   def updateDeviceInfo(self, devId: str, info) -> Dict[str, Any]:
-    return self.api.put('/v1.0/iot-03/devices/{}'.format(devId), info)
+      """Update device information
+
+      Update device information, such as the device name.
+
+      Args:
+        devId(str): device id
+        info(map): A dict mapping device information, for example:{"name": "room light"}
+
+      Returns:
+          response: response body
+
+      """
+      return self.api.put('/v1.0/iot-03/devices/{}'.format(devId), info)
 
   def removeDevice(self, devId: str) -> Dict[str, Any]:
-    return self.api.delete('/v1.0/iot-03/devices/{}'.format(devId))
+      """Remove device
+
+      Args:
+        devId(str): device id
+
+      Returns:
+          response: response body
+      """
+      return self.api.delete('/v1.0/iot-03/devices/{}'.format(devId))
 
   def removeDeviceList(self, devIds: List[str]) -> Dict[str, Any]:
-    return self.api.delete('/v1.0/iot-03/devices', {'device_ids': ','.join(devIds)})
+      """Remove devices
+
+      Args:
+        devId(list): device id list
+
+      Returns:
+          response: response body
+      """      
+      return self.api.delete('/v1.0/iot-03/devices', {'device_ids': ','.join(devIds)})
 
   def getFactoryInfo(self, devId: str) -> Dict[str, Any]:
-    return self.api.get('/v1.0/iot-03/devices/factory-infos', devId)
+      """Remove devices factory infos
+
+      Args:
+        devId(list): device id list
+
+      Returns:
+          response: response body
+      """
+      return self.api.get('/v1.0/iot-03/devices/factory-infos', devId)
 
   def factoryReset(self, devId: str) -> Dict[str, Any]:
-    return self.api.delete('/v1.0/iot-03/devices/{}/actions/reset'.format(devId))
+      """Reset device to factory status
+
+      Args:
+        devId(str): device id
+
+      Returns:
+          response: response body
+      """
+      return self.api.delete('/v1.0/iot-03/devices/{}/actions/reset'.format(devId))
 
   # Device Status
   # https://developer.tuya.com/docs/cloud/industrial-general-device-status-query/f8108a55e3?id=Kag2t60ii54jf
 
   def getDeviceStatus(self, devId: str) -> Dict[str, Any]:
+    """Get device status
+
+    Args:
+      devId(str): device id
+
+    Returns:
+        response: response body
+    """
     return self.api.get('/v1.0/iot-03/devices/{}/status'.format(devId))
 
   def getDeviceListStatus(self, devIds: List[str]) -> Dict[str, Any]:
+    """Get devices status
+
+    Args:
+      devIds(list): device ids
+
+    Returns:
+        response: response body
+    """
     return self.api.get('/v1.0/iot-03/devices/status', {'device_ids': ','.join(devIds)})
 
   # Device Control
   # https://developer.tuya.com/docs/cloud/industrial-general-device-control/5d2e6fbe8e?id=Kag2t6n3ony2c
 
   def getDeviceSpecification(self, devId: str) -> Dict[str, Any]:
+    """Get device specification attributes
+
+    Obtain device specification attributes according to device ID, including command set and status set.
+
+    Args:
+      devId: device id
+
+    Returns:
+        response: response body
+    """
     return self.api.get('/v1.0/iot-03/devices/{}/specification'.format(devId))
 
   def getDeviceFunctions(self, devId: str) -> Dict[str, Any]:
+    """Get the command set supported by the device
+
+    Get the command set supported by the device based on the device ID.
+
+    Args:
+      devId: device id
+
+    Returns:
+        response: response body
+    """
     return self.api.get('/v1.0/iot-03/devices/{}/functions'.format(devId))
 
   def getCategoryFunctions(self, categoryId: str) -> Dict[str, Any]:
+    """Get the instruction set supported by the category
+
+    Get the instruction set supported by the category based on the product category Code
+
+    Args:
+      category: category code
+
+    Returns:
+        response: response body
+    """
     return self.api.get('/v1.0/iot-03/categories/{}/functions'.format(categoryId))
 
-  def publishCommands(self, devId: str, commands: List[str]) -> Dict[str, Any]:
+  def sendCommands(self, devId: str, commands: List[str]) -> Dict[str, Any]:
+    """Send commands
+
+    Send command to the device.For example:
+      {"commands": [{"code": "switch_led","value": true}]}
+
+    Args:
+      devId(str): device id
+      commands(list):  commands list
+
+    Returns:
+        response: response body
+    """
     return self.api.post('/v1.0/iot-03/devices/{}/commands'.format(devId), {'commands': commands})
 
   # Device Registration

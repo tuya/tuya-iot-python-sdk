@@ -39,6 +39,13 @@ class TuyaMQConfig:
     self.expireTime = result.get('expire_time', 0)
 
 class TuyaOpenMQ(threading.Thread):
+  """Tuya open iot hub
+
+  Tuya open iot hub base on mqtt.
+
+  Attributes:
+    openapi: tuya openapi
+  """
   api: TuyaOpenAPI
   client: mqtt.Client = None
   message_listeners = set()
@@ -140,17 +147,29 @@ class TuyaOpenMQ(threading.Thread):
     return mqttc
 
   def start(self):
+    """Start mqtt 
+
+    Start mqtt thread
+    """
     print("[tuya-openmq] start")
     super().start()
 
   def stop(self):
+    """Stop mqtt
+
+    Stop mqtt thread
+    """
     print("[tuya-openmq] stop")
     self.message_listeners = set()
     self.client.disconnect()
     super().stop()
 
   def add_message_listener(self, listener: Callable[[str], None]):
+    """Add mqtt message listener
+    """
     self.message_listeners.add(listener)
 
   def remove_message_listener(self, listener: Callable[[str], None]):
+    """Remvoe mqtt message listener
+    """
     self.message_listeners.remove(listener)
