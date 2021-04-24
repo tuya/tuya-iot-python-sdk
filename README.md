@@ -13,54 +13,54 @@ A Python sdk for Tuya Open API, which provides basic IoT capabilities like devic
 
 ## Features
 - OpenAPI
-  - Get device list
-  - Get device detail
+  - Get the device list
+  - Get the device details
   - Get device status
-  - Control device
-  - Modify device name
-  - Query device log
-  - Remove device
+  - Control devices
+  - Modify the device name
+  - Query the device log
+  - Remove devices
   - ...
 - Open IoT Hub (Not released yet)
   - Get device status change
 
-## Possible Scenario
+## Possible scenarios
 
 - HomeAssistant Tuya Plugin
 - ...
 
-## Before Use
+## Before use
 
 ### Part 1. Tuya IoT Platform
 
-1. Register a Tuya Developer account in [Tuya Iot Platform](https://iot.tuya.com/).
-2. Go to [Tuya IoT Platform > Cloud Develop > Projects](https://iot.tuya.com/cloud/), create a project. (Project Type - Industry Solutions, Industry - Smart Home)
-3. Go to Projects > Your Project > Applications > Cloud, get your AccessID and AccessSecret
-4. Go to Projects > Your Project > Users, create a user.
-5. Go to Projects > Your Project > Assets, create an asset.
-6. Manage your asset, Authorized Users > Add Authorization, add the user created in step 4.
-7. Go to Projects > API Products > Industry Project, subscribe api products you need
-8. Go to Projects > API Products > Your subscribe API project > Project > New Authorization, authorize your project to use this API
-9. Add AccessID, AccessSecret, username, password, asset id in your code.
+1. Register a Tuya Developer account in [Tuya IoT Platform](https://iot.tuya.com/).
+2. Go to [Tuya IoT Platform > Cloud > Projects](https://iot.tuya.com/cloud/), and Click **Create**. Select **Industry Solutions** in the **Project Type** field, and select **Smart Home** in the **Industry** field.
+3. Go to **Projects** > **My Project**, and click the created project to view details. Click **Applications** > **Cloud** to get your AccessID and AccessSecret.
+4. Click **Users** > **Add User** to create a user.
+5. Click **Assets** > **New Asset** to create an asset.
+6. To manage your asset, click **Manage** in the **Action** column. Click **Authorized Users** > **Add Authorization**, and add the user created in Step 4.
+7. Go to **Projects** > **API Products** > **All Products**, click **Industry Project**, and subscribe to your desired API products.
+8. Go to **Projects** > **API Products** > **Subscribed Products**. Click one of your subscribed products, and click **Project** > **New Authorization** to authorize your project to use this API.
+9. Add the AccessID, AccessSecret, username, password, and asset ID in your code.
 
 <!-- Steps Video -->
 
 <!--
- - [Make a developer account on Tuya's site](https://iot.tuya.com/)
- - Once signed in, click on "Cloud" which on the left(or go to https://iot.tuya.com/cloud/)
- - Create a project
- - Click on your new project, you should see a screen similar to this![The project page](https://images.tuyacn.com/smart/developer/93ceaec6-8a9b-453a-a6a5-a9d8625aa955.png)
- - Note your Access ID and Access Secret
- - Click "Link Devices" in the left sidebar, then select the way you want to linked devices. For example, "Link devices by App Account", follow instructions on the site to add your Tuya app account and connected devices.
- - Click "API Groups" in the left sidebar, then apply api group as needed by your usage. For example, "Device Management".
+ - [Register a developer account on Tuya's site](https://iot.tuya.com/).
+ - Once signed in, click **Cloud** on the left sidebar (or go to https://iot.tuya.com/cloud/).
+ - Create a project.
+ - Click your new project, and you will see a screen similar to this. [The project page](https://images.tuyacn.com/smart/developer/93ceaec6-8a9b-453a-a6a5-a9d8625aa955.png)
+ - Find your Access ID and Access Secret.
+ - Click **Link Devices**, and select the way you want to link the devices. For example, select **Link devices by App Account**, follow instructions on the screen to add your Tuya Smart app account and connected devices.
+ - Click **API Products** in the left sidebar, and apply the API products as needed by your usage. For example, **Device Management**.
 -->
 
-### Part 2. Device Config
+### Part 2. Device configuration
 
-1. Open a IoT Config App.(WeChat Mini Programs/iOS App/Android, not ready)
-2. Login Tuya developer account.
-3. Choose the asset created in part 1.
-4. Config your device into the asset.
+1. Open the IoT Config app (not available for WeChat Mini Programs, iOS apps, and Android apps).
+2. Log in to [Tuya IoT Platform](https://iot.tuya.com/).
+3. Choose the asset created in Part 1.
+4. Configure your device into the asset.
 
 <!-- Steps Video -->
 
@@ -70,15 +70,15 @@ A Python sdk for Tuya Open API, which provides basic IoT capabilities like devic
 
 `pip3 install tuya-iot-py-sdk`
 
-## Code Sample
+## Sample code
 
 [OpenAPI Sample](./example/api.py)
 
 [Open IoT Hub Sample](./example/mq.py)
 
-## Tuya Open API Reference
+## Tuya Open API reference
 
 Tuya opens up a variety of APIs covering business scenarios such as device pairing, smart home management, device control, and scene automation. You can call APIs according to API integration documents to implement applications.
 
-See: https://developer.tuya.com/cn/docs/cloud/
+For more information, see the [documentation](https://developer.tuya.com/en/docs/cloud/).
 <!-- [Documentation > Cloud Development > API Reference](https://developer.tuya.com/docs/iot/open-api/api-reference/api-reference) -->
