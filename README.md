@@ -1,10 +1,10 @@
-⚠️ Working in progress. Will be released before 2021 summer.
 
-# [WIP] tuya-iot-app-sdk-python
 
-With diversified devices and industries, Cloud Development Platform opens basic IoT capabilities like device management, AI scenarios, and data analytics services, as well as industry capabilities, helping you create IoT solutions.
+# [WIP] tuya-iot-py-sdk
 
-## Preview
+A Python sdk for Tuya Open API, which provides basic IoT capabilities like device management, asset management and industry capabilities, helping you create IoT solutions. With diversified devices and industries, Tuya Cloud Development Platform opens basic IoT capabilities like device management, AI scenarios, and data analytics services, as well as industry capabilities, helping you create IoT solutions.
+
+<!-- ## Preview -->
 
 <!-- 
 [![Watch the video](https://img.youtube.com/vi/izV4b-ZQSds/maxresdefault.jpg)](https://youtu.be/izV4b-ZQSds)
@@ -68,7 +68,7 @@ With diversified devices and industries, Cloud Development Platform opens basic 
 
 ## Installation
 
-`pip3 install tuya-iot-app-sdk-python`
+`pip3 install tuya-iot-py-sdk`
 
 ## Code Sample
 

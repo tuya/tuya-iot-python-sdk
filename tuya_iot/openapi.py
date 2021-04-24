@@ -51,6 +51,8 @@ class TuyaOpenAPI():
     lang: str = ''
     tokenInfo: TuyaTokenInfo = None
 
+    dev_channel: str = ''
+
     def __init__(self, endpoint: str, accessID: str, accessKey: str, lang: str = 'en'):
         self.session = requests.session()
 
@@ -86,6 +88,9 @@ class TuyaOpenAPI():
         self.tokenInfo.accessToken = ''
         response = self.get('/v1.0/token/{}'.format(self.tokenInfo.refreshToken))
         self.tokenInfo = TuyaTokenInfo(response)
+
+    def set_dev_channel(self, dev_channel:str):
+        self.dev_channel = dev_channel
 
     def login(self, username: str, password: str) -> Dict[str, Any]:
         """
@@ -126,6 +131,11 @@ class TuyaOpenAPI():
             't': str(t),
             'lang': self.lang,
         }
+
+        if ('/v1.0/iot-03/users/login' == path):
+            headers['dev_lang'] = 'python'
+            headers['dev_version'] = '0.1.1'
+            headers['dev_channel'] = self.dev_channel
 
         print('[tuya-openapi] Request: method = {}, url = {}, params = {}, body = {}, headers = {}'.format(
             method, self.endpoint + path, params, body, headers))

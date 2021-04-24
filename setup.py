@@ -5,7 +5,7 @@
 from setuptools import setup, find_packages, Extension
 import glob
 
-VERSION = '0.1.23'
+VERSION = '0.1.1'
 
 tests_require = []
 
@@ -15,18 +15,26 @@ def requirements():
         requirements = [line.strip() for line in fileobj]
         return requirements
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 
 setup(
-    name='tuya-iot-app-sdk-python',
+    name='tuya-iot-py-sdk',
     url='https://github.com/tuya/tuya-iot-app-sdk-python',
     author="Tuya Inc.",
     author_email='developer@tuya.com',
     keywords='tuya iot app sdk python',
-    description='Tuya IoT App SDK Python Version',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    description='A Python sdk for Tuya Open API, which provides IoT capabilities, maintained by Tuya official',
     license='MIT',
+    project_urls={
+        "Bug Tracker": "https://github.com/tuya/tuya-iot-app-sdk-python/issues",
+    },
     classifiers=[
-        'Development Status :: 4 - Beta'
-        'License :: OSI Approved :: MIT License'
+        'Development Status :: 4 - Beta',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Topic :: Software Development',
         'Programming Language :: Python :: 3',

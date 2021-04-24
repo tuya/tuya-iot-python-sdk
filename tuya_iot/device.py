@@ -155,7 +155,7 @@ class TuyaDeviceManager:
     
     self._updateDeviceListInfoCache(devIds)
     self._updateDeviceListStatusCache(devIds)
-    self._updateCategoryFunctionCache()
+    self._updateDeviceFunctionCache()
 
   def _updateDeviceListInfoCache(self, devIds: List[str]):
     response = self.getDeviceListInfo(devIds)
@@ -174,21 +174,31 @@ class TuyaDeviceManager:
         device = self.deviceMap[devId]
         device.status[code] = value
 
-  def _updateCategoryFunctionCache(self):
-    categoryIds = set()
+  def _updateDeviceFunctionCache(self):
     for (devId, device) in self.deviceMap.items():
-      if device.category != '':
-        categoryIds.add(device.category)
-    for category in categoryIds:
-      response = self.getCategoryFunctions(category)
+      response = self.getDeviceFunctions(devId)
       result = response.get('result', {})
       functionMap = {}
       for function in result['functions']:
         code = function['code']
         functionMap[code] = TuyaDeviceFunction(**function)
-      self.categoryFunctionMap[category] = functionMap
-    for (devId, device) in self.deviceMap.items():
-      device.function = self.categoryFunctionMap[device.category]
+      device.function = functionMap
+      
+  # def _updateCategoryFunctionCache(self):
+  #   categoryIds = set()
+  #   for (devId, device) in self.deviceMap.items():
+  #     if device.category != '':
+  #       categoryIds.add(device.category)
+  #   for category in categoryIds:
+  #     response = self.getCategoryFunctions(category)
+  #     result = response.get('result', {})
+  #     functionMap = {}
+  #     for function in result['functions']:
+  #       code = function['code']
+  #       functionMap[code] = TuyaDeviceFunction(**function)
+  #     self.categoryFunctionMap[category] = functionMap
+  #   for (devId, device) in self.deviceMap.items():
+  #     device.function = self.categoryFunctionMap[device.category]
 
   ##############################
   # OpenAPI
@@ -341,6 +351,19 @@ class TuyaDeviceManager:
         response: response body
     """
     return self.api.get('/v1.0/iot-03/categories/{}/functions'.format(categoryId))
+  
+  def getDeviceFunctions(self, devId:str) -> Dict[str, Any]:
+    """Get the instruction set supported by the device
+
+    Get the instruction set supported by the device
+
+    Args:
+      devId: device id
+
+    Returns:
+      response: response body
+    """
+    return self.api.get('/v1.0/iot-03/devices/{}/functions'.format(devId))
 
   def sendCommands(self, devId: str, commands: List[str]) -> Dict[str, Any]:
     """Send commands
