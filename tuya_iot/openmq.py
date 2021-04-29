@@ -14,6 +14,7 @@ from paho.mqtt import client as mqtt
 from Crypto.Cipher import AES
 
 from .openapi import TuyaOpenAPI
+from .project_type import ProjectType
 
 LINK_ID = 'tuya-iot-app-sdk-python.{}'.format(uuid.uuid1())
 GCM_TAG_LENGTH = 16
@@ -52,12 +53,13 @@ class TuyaOpenMQ(threading.Thread):
     client: mqtt.Client = None
     message_listeners = set()
 
-    def __init__(self, api: TuyaOpenAPI):
+    def __init__(self, 
+        api: TuyaOpenAPI):
         threading.Thread.__init__(self)
         self.api = api
 
     def _get_mqtt_config(self) -> TuyaMQConfig:
-        response = self.api.post('/v1.0/iot-03/open-hub/access-config', {
+        response = self.api.post('/v1.0/iot-03/open-hub/access-config' if (self.api.project_type == ProjectType.INDUSTY_SOLUTIONS) else '/v1.0/open-hub/access/config', {
             'uid': self.api.tokenInfo.uid,
             'link_id': LINK_ID,
             'link_type': 'mqtt',

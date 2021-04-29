@@ -8,6 +8,7 @@ import json
 import requests
 
 from typing import Any, Dict, Optional
+from .project_type import ProjectType
 
 TUYA_ERROR_CODE_TOKEN_INVALID = 1010
 
@@ -53,13 +54,20 @@ class TuyaOpenAPI():
 
     dev_channel: str = ''
 
-    def __init__(self, endpoint: str, accessID: str, accessKey: str, lang: str = 'en'):
+    def __init__(self, 
+        endpoint: str, 
+        accessID: str, 
+        accessKey: str, 
+        project_type: ProjectType = ProjectType.INDUSTY_SOLUTIONS,
+        lang: str = 'en'):
         self.session = requests.session()
 
         self.endpoint = endpoint
         self.accessID = accessID
         self.accessKey = accessKey
         self.lang = lang
+
+        self.project_type = project_type
 
 
     # https://developer.tuya.com/docs/iot/open-api/api-reference/singnature?id=Ka43a5mtx1gsc
@@ -92,7 +100,7 @@ class TuyaOpenAPI():
     def set_dev_channel(self, dev_channel:str):
         self.dev_channel = dev_channel
 
-    def login(self, username: str, password: str) -> Dict[str, Any]:
+    def login(self, username: str = "", password: str = "") -> Dict[str, Any]:
         """
         user login
 
@@ -103,11 +111,15 @@ class TuyaOpenAPI():
         Returns:
             response: login response
         """
+
         response = self.post('/v1.0/iot-03/users/login', {
             'username': username,
             'password': hashlib.sha256(password.encode('utf8')).hexdigest().lower(),
-        })
-        self.tokenInfo = TuyaTokenInfo(response)
+        }) if (self.project_type == ProjectType.INDUSTY_SOLUTIONS) else self.get('/v1.0/token', {'grant_type':1})
+
+        if response['success']:
+            self.tokenInfo = TuyaTokenInfo(response)
+        
         return response
 
     def isLogin(self) -> bool:
