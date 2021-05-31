@@ -50,6 +50,7 @@ class TuyaOpenAPI():
     accessID: str = ''
     accessKey: str = ''
     lang: str = ''
+    login_path = ''
     tokenInfo: TuyaTokenInfo = None
 
     dev_channel: str = ''
@@ -68,6 +69,7 @@ class TuyaOpenAPI():
         self.lang = lang
 
         self.project_type = project_type
+        self.login_path = '/v1.0/iot-03/users/login' if (self.project_type == ProjectType.INDUSTY_SOLUTIONS) else '/v1.0/iot-01/associated-users/actions/authorized-login'
 
 
     # https://developer.tuya.com/docs/iot/open-api/api-reference/singnature?id=Ka43a5mtx1gsc
@@ -83,7 +85,7 @@ class TuyaOpenAPI():
         if self.isLogin() == False:
             return
 
-        if path.startswith('/v1.0/token'):
+        if path.startswith(self.login_path):
             return
 
         # should use refresh token?
@@ -94,19 +96,23 @@ class TuyaOpenAPI():
             return
 
         self.tokenInfo.accessToken = ''
-        response = self.get('/v1.0/token/{}'.format(self.tokenInfo.refreshToken))
+        response = self.post('/v1.0/iot-03/users/token/{}'.format(self.tokenInfo.refreshToken))
         self.tokenInfo = TuyaTokenInfo(response)
 
     def set_dev_channel(self, dev_channel:str):
         self.dev_channel = dev_channel
 
-    def login(self, username: str = "", password: str = "") -> Dict[str, Any]:
+    def login(self, 
+        username: str, 
+        password: str,
+        country_code : str = "") -> Dict[str, Any]:
         """
         user login
 
         Args:
             username (str): user name
-            password (str): user password
+            password (str): user password 
+            country_code (str): country code in SMART_HOME
 
         Returns:
             response: login response
@@ -115,10 +121,24 @@ class TuyaOpenAPI():
         response = self.post('/v1.0/iot-03/users/login', {
             'username': username,
             'password': hashlib.sha256(password.encode('utf8')).hexdigest().lower(),
-        }) if (self.project_type == ProjectType.INDUSTY_SOLUTIONS) else self.get('/v1.0/token', {'grant_type':1})
+        }) if (self.project_type == ProjectType.INDUSTY_SOLUTIONS) else \
+            self.post('/v1.0/iot-01/associated-users/actions/authorized-login', {
+                'username': username,
+                'password': hashlib.md5(password.encode('utf8')).hexdigest(),
+                'country_code': country_code,
+                'schema': 'tuyaSmart'
+            })
 
-        if response['success']:
-            self.tokenInfo = TuyaTokenInfo(response)
+        if not response['success']:
+            return response
+
+        self.tokenInfo = TuyaTokenInfo(response)
+        # if self.project_type == ProjectType.SMART_HOME:
+        #     repsonse = self.get('/v1.0/token'.format('tuya'))
+        #     if response['success']:
+        #         for item in response['result']['list']:
+        #             # if username == item["username"]
+        #             print(item)
         
         return response
 
@@ -144,7 +164,7 @@ class TuyaOpenAPI():
             'lang': self.lang,
         }
 
-        if ('/v1.0/iot-03/users/login' == path):
+        if (self.login_path == path):
             headers['dev_lang'] = 'python'
             headers['dev_version'] = '0.1.1'
             headers['dev_channel'] = self.dev_channel

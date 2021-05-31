@@ -5,7 +5,7 @@
 from setuptools import setup, find_packages, Extension
 import glob
 
-VERSION = '0.1.2.1'
+VERSION = '0.1.2'
 
 tests_require = []
 
@@ -16,7 +16,7 @@ def requirements():
         return requirements
 
 with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+    doc_long_description = fh.read()
 
 
 setup(
@@ -25,7 +25,7 @@ setup(
     author="Tuya Inc.",
     author_email='developer@tuya.com',
     keywords='tuya iot app sdk python',
-    long_description=long_description,
+    long_description=doc_long_description,
     long_description_content_type="text/markdown",
     description='A Python sdk for Tuya Open API, which provides IoT capabilities, maintained by Tuya official',
     license='MIT',

@@ -57,14 +57,16 @@ class TuyaOpenMQ(threading.Thread):
         api: TuyaOpenAPI):
         threading.Thread.__init__(self)
         self.api = api
+        self._stop_event = threading.Event()
 
     def _get_mqtt_config(self) -> TuyaMQConfig:
-        response = self.api.post('/v1.0/iot-03/open-hub/access-config' if (self.api.project_type == ProjectType.INDUSTY_SOLUTIONS) else '/v1.0/open-hub/access/config', {
+        
+        response = self.api.post('/v1.0/iot-03/open-hub/access-config', {
             'uid': self.api.tokenInfo.uid,
             'link_id': LINK_ID,
             'link_type': 'mqtt',
             'topics': 'device',
-            'msg_encrypted_version': '2.0'
+            'msg_encrypted_version': '2.0' if (self.api.project_type == ProjectType.INDUSTY_SOLUTIONS) else '1.0'
         })
 
         if response.get('success', False) == False:
@@ -77,33 +79,37 @@ class TuyaOpenMQ(threading.Thread):
                            password: str,
                            t: str) -> Dict[str, Any]:
         key = password[8:24]
-        # cipher = AES.new(password.encode("utf8"), AES.MODE_ECB)
-        # msg = cipher.decrypt(base64.b64decode(b64msg))
-        # padding_bytes = msg[-1]
-        # msg = msg[:-padding_bytes]
 
-        # base64 decode
-        buffer = base64.b64decode(b64msg)
-        # get iv buffer
-        iv_length = int.from_bytes(buffer[0:4], byteorder='big')
-        iv_buffer = buffer[4:iv_length + 4]
-        # get data buffer
-        data_buffer = buffer[iv_length + 4:len(buffer) - GCM_TAG_LENGTH]
-        # aad
-        aad_buffer = str(t).encode("utf8")
-        # tag
-        tag_buffer = buffer[len(buffer) - GCM_TAG_LENGTH:]
+        if self.api.project_type == ProjectType.SMART_HOME:
+            cipher = AES.new(key.encode("utf8"), AES.MODE_ECB)
+            msg = cipher.decrypt(base64.b64decode(b64msg))
+            padding_bytes = msg[-1]
+            msg = msg[:-padding_bytes]
+            return json.loads(msg)
+        else:
+            # base64 decode
+            buffer = base64.b64decode(b64msg)
+            # get iv buffer
+            iv_length = int.from_bytes(buffer[0:4], byteorder='big')
+            iv_buffer = buffer[4:iv_length + 4]
+            # get data buffer
+            data_buffer = buffer[iv_length + 4:len(buffer) - GCM_TAG_LENGTH]
+            # aad
+            aad_buffer = str(t).encode("utf8")
+            # tag
+            tag_buffer = buffer[len(buffer) - GCM_TAG_LENGTH:]
 
-        cipher = AES.new(key.encode("utf8"), AES.MODE_GCM, nonce=iv_buffer)
-        cipher.update(aad_buffer)
-        plaintext = cipher.decrypt_and_verify(data_buffer, tag_buffer).decode("utf8")
-        print("[tuya-openmq] plaintext", plaintext)
-        return json.loads(plaintext)
+            cipher = AES.new(key.encode("utf8"), AES.MODE_GCM, nonce=iv_buffer)
+            cipher.update(aad_buffer)
+            plaintext = cipher.decrypt_and_verify(data_buffer, tag_buffer).decode("utf8")
+            return json.loads(plaintext)
 
     def _on_connect(self, mqttc: mqtt.Client, userData: Any, flags, rc):
         print("[tuya-openmq] connected")
 
     def _on_message(self, mqttc: mqtt.Client, userData: Any, msg: mqtt.MQTTMessage):
+        print("[tuya-openmq] payload->", msg.payload)
+
         msgDict = json.loads(msg.payload.decode('utf8'))
 
         topic = msg.topic
@@ -112,8 +118,6 @@ class TuyaOpenMQ(threading.Thread):
         pv = msgDict.get('pv', '')
         data = msgDict.get('data', '')
         t = msgDict.get('t', '')
-
-        # TODO sign check
 
         mqConfig = userData['mqConfig']
         decryptedData = self._decode_mq_message(
@@ -136,7 +140,7 @@ class TuyaOpenMQ(threading.Thread):
         pass
 
     def run(self):
-        while True:
+        while not self._stop_event.is_set():
             mqConfig = self._get_mqtt_config()
             if mqConfig == None:
                 print('[tuya-openmq] error while get mqtt config')
@@ -188,7 +192,8 @@ class TuyaOpenMQ(threading.Thread):
         print("[tuya-openmq] stop")
         self.message_listeners = set()
         self.client.disconnect()
-        super().stop()
+        self.client = None
+        self._stop_event.set()
 
     def add_message_listener(self, listener: Callable[[str], None]):
         """Add mqtt message listener

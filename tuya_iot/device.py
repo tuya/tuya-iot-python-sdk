@@ -80,6 +80,18 @@ class TuyaDevice(SimpleNamespace):
     def __eq__(self, other):
         return self.id == other.id
 
+class TuyaDeviceListener(metaclass=abc.ABCMeta):
+    @abc.abstractclassmethod
+    def updateDevice(self, device:TuyaDevice):
+        pass
+
+    @abc.abstractclassmethod
+    def addDevice(self, device:TuyaDevice):
+        pass
+
+    @abc.abstractclassmethod
+    def removeDevice(self, id:str):
+        pass
 
 class TuyaDeviceManager:
     """Tuya Device Manager
@@ -92,9 +104,12 @@ class TuyaDeviceManager:
 
     categoryFunctionMap: Dict[str, TuyaDeviceFunction] = {}
 
+    device_listeners = set()
+
     def __init__(self, 
         api: TuyaOpenAPI, 
         mq: TuyaOpenMQ):
+        self.api = api
         self.mq = mq
         self.device_manage = SmartHomeDeviceManage(api) if (api.project_type == ProjectType.SMART_HOME) else IndustrySolutionDeviceManage(api)
 
@@ -104,6 +119,7 @@ class TuyaDeviceManager:
         self.mq.remove_message_listener(self._onMessage)
 
     def _onMessage(self, msg: str):
+        print("device mq->", msg)
         protocol = msg.get('protocol', 0)
         data = msg.get('data', {})
         if protocol == PROTOCOL_DEVICE_REPORT:
@@ -112,34 +128,67 @@ class TuyaDeviceManager:
             self._onDeviceOther(data['devId'], data['bizCode'], data)
         else:
             pass
+    
+    def __update_device(self, device:TuyaDevice):
+        for listener in self.device_listeners:
+            listener.updateDevice(device)
 
-    def _onDeviceReport(self, devId: str, status: str):
+    def _onDeviceReport(self, devId: str, status: List):
         device = self.deviceMap.get(devId, None)
         if not device:
             return
         print('_onDeviceReport->', status)
         for item in status:
-            code = item['code']
-            value = item['value']
-            device.status[code] = value
+            if 'code' in item and 'value' in item:
+                code = item['code']
+                value = item['value']
+                device.status[code] = value
+        
+        self.__update_device(device)
 
     def _onDeviceOther(self, devId: str, bizCode: str, data: Dict[str, Any]):
+        print('_onDeviceReport->', devId, '--', bizCode)
+
+        ## bind device to user
+        if bizCode == BIZCODE_BIND_USER:
+            devId = data['devId']
+            devIds = [devId]
+            self._updateDeviceListInfoCache(devIds)
+            self._updateDeviceListStatusCache(devIds)
+            response = self.getDeviceFunctions(devId)
+            if response.get('success'):
+                result = response.get('result', {})
+                functionMap = {}
+                for function in result['functions']:
+                    code = function['code']
+                    functionMap[code] = TuyaDeviceFunction(**function)
+                self.deviceMap[devId].function = functionMap
+            
+            if devId in self.deviceMap.keys():
+                device = self.deviceMap.get(devId)
+                for listener in self.device_listeners:
+                    listener.addDevice(device)
+
+        ## device status update
         device = self.deviceMap.get(devId, None)
         if not device:
             return
 
         if bizCode == BIZCODE_ONLINE:
             device.online = True
+            self.__update_device(device)
         elif bizCode == BIZCODE_OFFLINE:
             device.online = False
+            self.__update_device(device)
         elif bizCode == BIZCODE_NAME_UPDATE:
-            device.name = data['name']
+            device.name = data['bizData']['name']
+            self.__update_device(device)
         elif bizCode == BIZCODE_DPNAME_UPDATE:
-            pass
-        elif bizCode == BIZCODE_BIND_USER:
             pass
         elif bizCode == BIZCODE_DELETE:
             del self.deviceMap[devId]
+            for listener in self.device_listeners:
+                listener.removeDevice(device.id)
         elif bizCode == BIZCODE_P2P_SIGNAL:
             pass
         else:
@@ -147,6 +196,24 @@ class TuyaDeviceManager:
 
     ##############################
     # Memory Cache
+
+    def updateDeviceListInSmartHome(self):
+        """update devices status in Project type SmartHome
+        """
+        response = self.api.get(
+                '/v1.0/users/{}/devices'.format(self.api.tokenInfo.uid))
+        if response['success']:
+            for item in response['result']:
+                device = TuyaDevice(**item)
+                status = {}
+                for item_status in device.status:
+                    code = item_status['code']
+                    value = item_status['value']
+                    status[code] = value
+                device.status = status
+                self.deviceMap[item['id']] = device
+
+        self.updateDeviceFunctionCache()
 
     def updateDeviceCaches(self, devIds: List[str]):
         ##TODO industry solution devIds max handle 20 devices once call
@@ -157,10 +224,11 @@ class TuyaDeviceManager:
         Args:
           devIds(List[str]): devices' id
         """
-
         self._updateDeviceListInfoCache(devIds)
         self._updateDeviceListStatusCache(devIds)
-        self._updateDeviceFunctionCache()
+
+
+        self.updateDeviceFunctionCache()
 
     def _updateDeviceListInfoCache(self, devIds: List[str]):
         
@@ -180,16 +248,23 @@ class TuyaDeviceManager:
                 value = status['value']
                 device = self.deviceMap[devId]
                 device.status[code] = value
-
-    def _updateDeviceFunctionCache(self):
+    
+    def updateDeviceFunctionCache(self):
         for (devId, device) in self.deviceMap.items():
             response = self.getDeviceFunctions(devId)
-            result = response.get('result', {})
-            functionMap = {}
-            for function in result['functions']:
-                code = function['code']
-                functionMap[code] = TuyaDeviceFunction(**function)
-            device.function = functionMap
+            if response.get('success'):
+                result = response.get('result', {})
+                functionMap = {}
+                for function in result['functions']:
+                    code = function['code']
+                    functionMap[code] = TuyaDeviceFunction(**function)
+                device.function = functionMap
+
+    def addDeviceListener(self, listener:TuyaDeviceListener):
+        self.device_listeners.add(listener)
+    
+    def removeDeviceListener(self, listener:TuyaDeviceListener):
+        self.device_listeners.remove(listener)
 
     ##############################
     # OpenAPI
@@ -430,10 +505,10 @@ class SmartHomeDeviceManage(DeviceManage):
 
     def getDeviceListInfo(self, devIds: List[str]) -> Dict[str, Any]:
         response = self.api.get('/v1.0/devices/', {'device_ids': ','.join(devIds)})
-        if response.success :
-            for info in result.result.List:
+        if response['success'] :
+            for info in response['result']['devices']:
                 info.pop('status')
-        response['result']['list'] = response['result'].pop('devices')
+        response['result']['list'] = response['result']['devices']
         return response
 
     def getDeviceStatus(self, devId: str) -> Dict[str, Any]:
@@ -444,8 +519,8 @@ class SmartHomeDeviceManage(DeviceManage):
     def getDeviceListStatus(self, devIds: List[str]) -> Dict[str, Any]:
         response = self.api.get('/v1.0/devices/', {'device_ids': ','.join(devIds)})
         status_list = []
-        if response.success :
-            for info in result['result']['list']:
+        if response['success'] :
+            for info in response['result']['devices']:
                 status_list.append({"id":info["id"], 'status':info['status']})
                 
         response['result'] = status_list
