@@ -15,8 +15,6 @@ class TuyaAssetManager:
 
   """
 
-  api: TuyaOpenAPI
-
   def __init__(self, api: TuyaOpenAPI):
     self.api = api
 

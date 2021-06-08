@@ -3,6 +3,7 @@
 
 import json
 import abc
+import time
 from types import SimpleNamespace
 from typing import Any, Dict, List
 
@@ -100,12 +101,6 @@ class TuyaDeviceManager:
 
     """
 
-    deviceMap: Dict[str, TuyaDevice] = {}
-
-    categoryFunctionMap: Dict[str, TuyaDeviceFunction] = {}
-
-    device_listeners = set()
-
     def __init__(self, 
         api: TuyaOpenAPI, 
         mq: TuyaOpenMQ):
@@ -114,6 +109,9 @@ class TuyaDeviceManager:
         self.device_manage = SmartHomeDeviceManage(api) if (api.project_type == ProjectType.SMART_HOME) else IndustrySolutionDeviceManage(api)
 
         mq.add_message_listener(self._onMessage)
+        self.deviceMap: Dict[str, TuyaDevice] = {}
+        self.device_listeners = set()
+
 
     def __del__(self):
         self.mq.remove_message_listener(self._onMessage)
@@ -153,6 +151,9 @@ class TuyaDeviceManager:
         if bizCode == BIZCODE_BIND_USER:
             devId = data['devId']
             devIds = [devId]
+            ## wait for es sync
+            time.sleep(1)
+            
             self._updateDeviceListInfoCache(devIds)
             self._updateDeviceListStatusCache(devIds)
             response = self.getDeviceFunctions(devId)

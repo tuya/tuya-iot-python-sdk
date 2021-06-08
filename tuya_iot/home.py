@@ -9,10 +9,9 @@ from .device import TuyaDeviceManager, TuyaDevice
 
 
 class TuyaHomeManager:
-    def __init__(self,
-                 api: TuyaOpenAPI,
-                 mq: TuyaOpenMQ,
-                 device_manager: TuyaDeviceManager):
+    def __init__(
+        self, api: TuyaOpenAPI, mq: TuyaOpenMQ, device_manager: TuyaDeviceManager
+    ):
 
         self.api = api
         self.mq = mq
@@ -24,12 +23,11 @@ class TuyaHomeManager:
             devIds = []
             assetManager = TuyaAssetManager(self.api)
             response = assetManager.getAssetList()
-            assets = response.get('result', {}).get('assets', [])
+            assets = response.get("result", {}).get("assets", [])
             for asset in assets:
-                asset_id = asset['asset_id']
+                asset_id = asset["asset_id"]
                 devIds += assetManager.getDeviceList(asset_id)
 
             self.device_manager.updateDeviceCaches(devIds)
         elif self.api.project_type == ProjectType.SMART_HOME:
-            
             self.device_manager.updateDeviceListInSmartHome()

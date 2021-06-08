@@ -12,6 +12,7 @@ from .project_type import ProjectType
 
 TUYA_ERROR_CODE_TOKEN_INVALID = 1010
 
+
 class TuyaTokenInfo:
     """
     Tuya token info
@@ -22,22 +23,20 @@ class TuyaTokenInfo:
         refreshToken: Refresh token.
         uid: Tuya user ID.
     """
-    accessToken: str = ""
-    expireTime: int = 0
-    uid: str = ""
-    refreshToken: str = ""
 
     def __init__(self, tokenResponse: Dict[str, Any] = {}):
-        result = tokenResponse.get('result', {})
+        result = tokenResponse.get("result", {})
 
-        self.expireTime = tokenResponse.get(
-            't', 0) + result.get('expire', result.get('expire_time', 0)) * 1000
-        self.accessToken = result.get('access_token', '')
-        self.refreshToken = result.get('refresh_token', '')
-        self.uid = result.get('uid', '')
+        self.expireTime = (
+            tokenResponse.get("t", 0)
+            + result.get("expire", result.get("expire_time", 0)) * 1000
+        )
+        self.accessToken = result.get("access_token", "")
+        self.refreshToken = result.get("refresh_token", "")
+        self.uid = result.get("uid", "")
 
 
-class TuyaOpenAPI():
+class TuyaOpenAPI:
     """
     Open Api
 
@@ -45,22 +44,15 @@ class TuyaOpenAPI():
 
     openapi = TuyaOpenAPI(ENDPOINT, ACCESS_ID, ACCESS_KEY)
     """
-    session: requests.Session = requests.session()
-    endpoint: str = ''
-    accessID: str = ''
-    accessKey: str = ''
-    lang: str = ''
-    login_path = ''
-    tokenInfo: TuyaTokenInfo = None
 
-    dev_channel: str = ''
-
-    def __init__(self, 
-        endpoint: str, 
-        accessID: str, 
-        accessKey: str, 
+    def __init__(
+        self,
+        endpoint: str,
+        accessID: str,
+        accessKey: str,
         project_type: ProjectType = ProjectType.INDUSTY_SOLUTIONS,
-        lang: str = 'en'):
+        lang: str = "en",
+    ):
         self.session = requests.session()
 
         self.endpoint = endpoint
@@ -69,16 +61,31 @@ class TuyaOpenAPI():
         self.lang = lang
 
         self.project_type = project_type
-        self.login_path = '/v1.0/iot-03/users/login' if (self.project_type == ProjectType.INDUSTY_SOLUTIONS) else '/v1.0/iot-01/associated-users/actions/authorized-login'
+        self.login_path = (
+            "/v1.0/iot-03/users/login"
+            if (self.project_type == ProjectType.INDUSTY_SOLUTIONS)
+            else "/v1.0/iot-01/associated-users/actions/authorized-login"
+        )
+        self.tokenInfo: TuyaTokenInfo = None
 
+        self.dev_channel: str = ""
 
     # https://developer.tuya.com/docs/iot/open-api/api-reference/singnature?id=Ka43a5mtx1gsc
-    def _calculate_sign(self, client_id: str, secret: str, access_token: str ='', t: int = 0) -> (str, int):
-        if (t == 0):
+    def _calculate_sign(
+        self, client_id: str, secret: str, access_token: str = "", t: int = 0
+    ) -> (str, int):
+        if t == 0:
             t = int(time.time() * 1000)
         message = client_id + access_token + str(t)
-        sign = hmac.new(secret.encode('utf8'), msg=message.encode(
-            'utf8'), digestmod=hashlib.sha256).hexdigest().upper()
+        sign = (
+            hmac.new(
+                secret.encode("utf8"),
+                msg=message.encode("utf8"),
+                digestmod=hashlib.sha256,
+            )
+            .hexdigest()
+            .upper()
+        )
         return sign, t
 
     def _refresh_access_token_if_need(self, path: str):
@@ -92,44 +99,56 @@ class TuyaOpenAPI():
         now = int(time.time() * 1000)
         expired_time = self.tokenInfo.expireTime
 
-        if expired_time - 60 * 1000 > now: # 1min
+        if expired_time - 60 * 1000 > now:  # 1min
             return
 
-        self.tokenInfo.accessToken = ''
-        response = self.post('/v1.0/iot-03/users/token/{}'.format(self.tokenInfo.refreshToken))
+        self.tokenInfo.accessToken = ""
+        response = self.post(
+            "/v1.0/iot-03/users/token/{}".format(self.tokenInfo.refreshToken)
+        )
         self.tokenInfo = TuyaTokenInfo(response)
 
-    def set_dev_channel(self, dev_channel:str):
+    def set_dev_channel(self, dev_channel: str):
         self.dev_channel = dev_channel
 
-    def login(self, 
-        username: str, 
-        password: str,
-        country_code : str = "") -> Dict[str, Any]:
+    def login(
+        self, username: str, password: str, country_code: str = "", schema: str = ""
+    ) -> Dict[str, Any]:
         """
         user login
 
         Args:
             username (str): user name
-            password (str): user password 
+            password (str): user password
             country_code (str): country code in SMART_HOME
 
         Returns:
             response: login response
         """
 
-        response = self.post('/v1.0/iot-03/users/login', {
-            'username': username,
-            'password': hashlib.sha256(password.encode('utf8')).hexdigest().lower(),
-        }) if (self.project_type == ProjectType.INDUSTY_SOLUTIONS) else \
-            self.post('/v1.0/iot-01/associated-users/actions/authorized-login', {
-                'username': username,
-                'password': hashlib.md5(password.encode('utf8')).hexdigest(),
-                'country_code': country_code,
-                'schema': 'tuyaSmart'
-            })
+        response = (
+            self.post(
+                "/v1.0/iot-03/users/login",
+                {
+                    "username": username,
+                    "password": hashlib.sha256(password.encode("utf8"))
+                    .hexdigest()
+                    .lower(),
+                },
+            )
+            if (self.project_type == ProjectType.INDUSTY_SOLUTIONS)
+            else self.post(
+                "/v1.0/iot-01/associated-users/actions/authorized-login",
+                {
+                    "username": username,
+                    "password": hashlib.md5(password.encode("utf8")).hexdigest(),
+                    "country_code": country_code,
+                    "schema": schema,
+                },
+            )
+        )
 
-        if not response['success']:
+        if not response["success"]:
             return response
 
         self.tokenInfo = TuyaTokenInfo(response)
@@ -139,51 +158,66 @@ class TuyaOpenAPI():
         #         for item in response['result']['list']:
         #             # if username == item["username"]
         #             print(item)
-        
+
         return response
 
     def isLogin(self) -> bool:
         return self.tokenInfo != None and len(self.tokenInfo.accessToken) > 0
 
-    def request(self, method: str, path: str, params: Optional[Dict[str, Any]] = None, body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def request(
+        self,
+        method: str,
+        path: str,
+        params: Optional[Dict[str, Any]] = None,
+        body: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
 
         self._refresh_access_token_if_need(path)
 
-        accessToken = ''
+        accessToken = ""
         if self.tokenInfo:
             accessToken = self.tokenInfo.accessToken
 
-        sign, t = self._calculate_sign(
-            self.accessID, self.accessKey, accessToken)
+        sign, t = self._calculate_sign(self.accessID, self.accessKey, accessToken)
         headers = {
-            'client_id': self.accessID,
-            'sign': sign,
-            'sign_method': 'HMAC-SHA256',
-            'access_token': accessToken,
-            't': str(t),
-            'lang': self.lang,
+            "client_id": self.accessID,
+            "sign": sign,
+            "sign_method": "HMAC-SHA256",
+            "access_token": accessToken,
+            "t": str(t),
+            "lang": self.lang,
         }
 
-        if (self.login_path == path):
-            headers['dev_lang'] = 'python'
-            headers['dev_version'] = '0.1.1'
-            headers['dev_channel'] = self.dev_channel
+        if self.login_path == path:
+            headers["dev_lang"] = "python"
+            headers["dev_version"] = "0.2.1"
+            headers["dev_channel"] = self.dev_channel
 
-        print('[tuya-openapi] Request: method = {}, url = {}, params = {}, body = {}, headers = {}'.format(
-            method, self.endpoint + path, params, body, headers))
+        print(
+            "[tuya-openapi] Request: method = {}, url = {}, params = {}, body = {}, headers = {}".format(
+                method, self.endpoint + path, params, body, headers
+            )
+        )
         response = self.session.request(
-            method, self.endpoint + path, params=params, json=body, headers=headers)
+            method, self.endpoint + path, params=params, json=body, headers=headers
+        )
 
         if response.ok == False:
-            print('[tuya-openapi] Response error: code={}, body={}'.format(
-                response.status_code, response.body))
+            print(
+                "[tuya-openapi] Response error: code={}, body={}".format(
+                    response.status_code, response.body
+                )
+            )
             return None
 
         result = response.json()
-        print('[tuya-openapi] Response: {}'.format(json.dumps(result,
-                                                              ensure_ascii=False, indent=2)))
+        print(
+            "[tuya-openapi] Response: {}".format(
+                json.dumps(result, ensure_ascii=False, indent=2)
+            )
+        )
 
-        if result.get('code', -1) == TUYA_ERROR_CODE_TOKEN_INVALID:
+        if result.get("code", -1) == TUYA_ERROR_CODE_TOKEN_INVALID:
             self.tokenInfo = None
             # TODO send event
 
@@ -200,9 +234,11 @@ class TuyaOpenAPI():
         Returns:
             response: response body
         """
-        return self.request('GET', path, params, None)
+        return self.request("GET", path, params, None)
 
-    def post(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def post(
+        self, path: str, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Http Post
         Requests the server to update specified resources.
 
@@ -213,7 +249,7 @@ class TuyaOpenAPI():
         Returns:
             response: response body
         """
-        return self.request('POST', path, None, params)
+        return self.request("POST", path, None, params)
 
     def put(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Http Put
@@ -226,9 +262,11 @@ class TuyaOpenAPI():
         Returns:
             response: response body
         """
-        return self.request('PUT', path, None, params)
+        return self.request("PUT", path, None, params)
 
-    def delete(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def delete(
+        self, path: str, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Http Delete
         Requires the server to delete specified resources.
 
@@ -239,4 +277,4 @@ class TuyaOpenAPI():
         Returns:
             response: response body
         """
-        return self.request('DELETE', path, params, None)
+        return self.request("DELETE", path, params, None)

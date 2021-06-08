@@ -139,5 +139,4 @@ cython_debug/
 
 
 .vscode/
-upload.sh
-upload_pypi.sh
+upload*

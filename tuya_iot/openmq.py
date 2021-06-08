@@ -49,15 +49,14 @@ class TuyaOpenMQ(threading.Thread):
     Attributes:
       openapi: tuya openapi
     """
-    api: TuyaOpenAPI
-    client: mqtt.Client = None
-    message_listeners = set()
 
     def __init__(self, 
         api: TuyaOpenAPI):
         threading.Thread.__init__(self)
-        self.api = api
+        self.api : TuyaOpenAPI= api
         self._stop_event = threading.Event()
+        self.client = None
+        self.message_listeners = set()
 
     def _get_mqtt_config(self) -> TuyaMQConfig:
         
@@ -203,4 +202,4 @@ class TuyaOpenMQ(threading.Thread):
     def remove_message_listener(self, listener: Callable[[str], None]):
         """Remvoe mqtt message listener
         """
-        self.message_listeners.remove(listener)
+        self.message_listeners.discard(listener)
