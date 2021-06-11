@@ -38,9 +38,9 @@ Please check [Tuya IoT Platform Configuration Guide](https://github.com/tuya/tuy
 
 ## Sample code
 
-[OpenAPI Sample](https://github.com/tuya/tuya-iot-python-sdk/example/api.py)
+[OpenAPI Sample](https://github.com/tuya/tuya-iot-python-sdk/blob/master/example/api.py)
 
-[Open IoT Hub Sample](https://github.com/tuya/tuya-iot-python-sdk/example/mq.py)
+[Open IoT Hub Sample](https://github.com/tuya/tuya-iot-python-sdk/blob/master/example/mq.py)
 
 ## Tuya Open API reference
 
