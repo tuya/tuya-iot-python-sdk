@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-#from distutils.core import setup
-from setuptools import setup, find_packages, Extension
-import glob
+# from distutils.core import setup
+from setuptools import setup, find_packages
 
-VERSION = '0.2.1'
+VERSION = '0.2.2'
 
 tests_require = []
 
@@ -14,6 +13,7 @@ def requirements():
     with open('requirements.txt', 'r') as fileobj:
         requirements = [line.strip() for line in fileobj]
         return requirements
+
 
 with open("README.md", "r", encoding="utf-8") as fh:
     doc_long_description = fh.read()

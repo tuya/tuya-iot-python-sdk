@@ -89,7 +89,7 @@ class TuyaOpenAPI:
         return sign, t
 
     def _refresh_access_token_if_need(self, path: str):
-        if self.isLogin() == False:
+        if self.isLogin() is False:
             return
 
         if path.startswith(self.login_path):
@@ -125,6 +125,11 @@ class TuyaOpenAPI:
         Returns:
             response: login response
         """
+
+        self.__username = username
+        self.__password = password
+        self.__country_code = country_code
+        self.__schema = schema
 
         response = (
             self.post(
@@ -162,7 +167,7 @@ class TuyaOpenAPI:
         return response
 
     def isLogin(self) -> bool:
-        return self.tokenInfo != None and len(self.tokenInfo.accessToken) > 0
+        return self.tokenInfo is not None and len(self.tokenInfo.accessToken) > 0
 
     def request(
         self,
@@ -190,7 +195,7 @@ class TuyaOpenAPI:
 
         if self.login_path == path:
             headers["dev_lang"] = "python"
-            headers["dev_version"] = "0.2.1"
+            headers["dev_version"] = "0.2.2"
             headers["dev_channel"] = self.dev_channel
 
         print(
@@ -202,7 +207,7 @@ class TuyaOpenAPI:
             method, self.endpoint + path, params=params, json=body, headers=headers
         )
 
-        if response.ok == False:
+        if response.ok is False:
             print(
                 "[tuya-openapi] Response error: code={}, body={}".format(
                     response.status_code, response.body
@@ -219,6 +224,9 @@ class TuyaOpenAPI:
 
         if result.get("code", -1) == TUYA_ERROR_CODE_TOKEN_INVALID:
             self.tokenInfo = None
+            self.login(
+                self.__username, self.__password, self.__country_code, self.__schema
+            )
             # TODO send event
 
         return result

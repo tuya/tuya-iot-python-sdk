@@ -5,7 +5,7 @@ from .openapi import TuyaOpenAPI
 from .openmq import TuyaOpenMQ
 from .project_type import ProjectType
 from .asset import TuyaAssetManager
-from .device import TuyaDeviceManager, TuyaDevice
+from .device import TuyaDeviceManager
 
 
 class TuyaHomeManager:
