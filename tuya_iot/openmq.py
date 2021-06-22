@@ -110,8 +110,17 @@ class TuyaOpenMQ(threading.Thread):
             )
             return json.loads(plaintext)
 
+    def _on_disconnect(self, client, userdata, rc):
+        if rc != 0:
+            print(f"[tuya-openmq] Unexpected disconnection.{rc}")
+        else:
+            print("[tuya-openmq] disconnect")
+
     def _on_connect(self, mqttc: mqtt.Client, userData: Any, flags, rc):
-        print("[tuya-openmq] connected")
+        print(f"[tuya-openmq] connect flags->{flags}, rc->{rc}")
+        if rc == 0:
+            for (key, value) in self.mqConfig.source_topic.items():
+                mqttc.subscribe(value)
 
     def _on_message(self, mqttc: mqtt.Client, userData: Any, msg: mqtt.MQTTMessage):
         print("[tuya-openmq] payload->", msg.payload)
@@ -137,12 +146,12 @@ class TuyaOpenMQ(threading.Thread):
             listener(msgDict)
 
     def _on_subscribe(self, mqttc: mqtt.Client, userData: Any, mid, granted_qos):
-        # print("[tuya-openmq] _on_subscribe: {}".format(mid))
-        pass
+        print("[tuya-openmq] _on_subscribe: {}".format(mid))
+        
 
     def _on_log(self, mqttc: mqtt.Client, userData: Any, level, string):
-        # print("[tuya-openmq] _on_log: {}".format(string))
-        pass
+        print("[tuya-openmq] _on_log: {}".format(string))
+        
 
     def run(self):
         while not self._stop_event.is_set():
@@ -150,6 +159,8 @@ class TuyaOpenMQ(threading.Thread):
             if mqConfig is None:
                 print("[tuya-openmq] error while get mqtt config")
                 break
+            
+            self.mqConfig = mqConfig
 
             print("[tuya-openmq] connecting {}".format(mqConfig.url))
             mqttc = self._start(mqConfig)
@@ -169,14 +180,13 @@ class TuyaOpenMQ(threading.Thread):
         mqttc.on_message = self._on_message
         mqttc.on_subscribe = self._on_subscribe
         mqttc.on_log = self._on_log
+        mqttc.on_disconnect = self._on_disconnect
 
         url = urlsplit(mqConfig.url)
         if url.scheme == "ssl":
             mqttc.tls_set()
 
         mqttc.connect(url.hostname, url.port)
-        for (key, value) in mqConfig.source_topic.items():
-            mqttc.subscribe(value)
 
         mqttc.loop_start()
         return mqttc

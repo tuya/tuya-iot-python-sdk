@@ -165,14 +165,8 @@ class TuyaDeviceManager:
 
             self._updateDeviceListInfoCache(devIds)
             self._updateDeviceListStatusCache(devIds)
-            response = self.getDeviceFunctions(device_id)
-            if response.get("success"):
-                result = response.get("result", {})
-                functionMap = {}
-                for function in result["functions"]:
-                    code = function["code"]
-                    functionMap[code] = TuyaDeviceFunction(**function)
-                self.deviceMap[device_id].function = functionMap
+
+            self.updateDeviceFunctionCache(devIds)
 
             if device_id in self.deviceMap.keys():
                 device = self.deviceMap.get(device_id)
@@ -236,7 +230,7 @@ class TuyaDeviceManager:
         self._updateDeviceListInfoCache(devIds)
         self._updateDeviceListStatusCache(devIds)
 
-        self.updateDeviceFunctionCache()
+        self.updateDeviceFunctionCache(devIds)
 
     def _updateDeviceListInfoCache(self, devIds: List[str]):
 
@@ -258,9 +252,11 @@ class TuyaDeviceManager:
                     device = self.deviceMap[device_id]
                     device.status[code] = value
 
-    def updateDeviceFunctionCache(self):
-        for (device_id, device) in self.deviceMap.items():
-            response = self.getDeviceSpecification(device_id)
+    def updateDeviceFunctionCache(self, devIds: list = []):
+        device_map = filter(lambda d: d.id in devIds, self.deviceMap.values()) if len(devIds) > 0 else self.deviceMap.values()
+
+        for device in device_map:
+            response = self.getDeviceSpecification(device.id)
             if response.get("success"):
                 result = response.get("result", {})
                 functionMap = {}
