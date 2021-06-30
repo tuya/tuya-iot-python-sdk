@@ -30,6 +30,7 @@ setup(
     license='MIT',
     project_urls={
         "Bug Tracker": "https://github.com/tuya/tuya-iot-app-sdk-python/issues",
+        "Changes": "https://github.com/tuya/tuya-iot-python-sdk/wiki/Tuya-IoT-Python-SDK-Release-Notes"
     },
     classifiers=[
         'Development Status :: 4 - Beta',
