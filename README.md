@@ -1,28 +1,81 @@
 # Tuya IoT Python SDK
 
+
+
 ![PyPI](https://img.shields.io/pypi/v/tuya-iot-py-sdk)
+
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/tuya-iot-py-sdk)
+
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tuya-iot-py-sdk)
 
-A Python sdk for Tuya Open API, which provides basic IoT capabilities like device management, asset management and industry capabilities, helping you create IoT solutions. With diversified devices and industries, Tuya Cloud Development Platform opens basic IoT capabilities like device management, AI scenarios, and data analytics services, as well as industry capabilities, helping you create IoT solutions.
+
+
+A Python sdk for Tuya Open API, which provides basic IoT capabilities like device management, asset management and industry capabilities, helping you create IoT solutions. 
+With diversified devices and industries, Tuya Cloud Development Platform opens basic IoT capabilities like device management, AI scenarios, and data analytics services, as well as industry capabilities, helping you create IoT solutions.
+
+
 
 ## Features
-- OpenAPI
-  - Get the device list
-  - Get the device details
-  - Get device status
-  - Control devices
-  - Modify the device name
-  - Query the device log
-  - Remove devices
-  - ...
-- Open IoT Hub
-  - Get device status change
+### Base APIs
+- TuyaOpenAPI
+	- login
+	- is_login
+	- get
+	- post
+	- put
+	- delete
+ 	
+- TuyaOpenQ
+	- start
+	- stop
+	- add_message_listner
+	- remove_message_listener
+
+### APIs
+- TuyaDeviceListener
+	- update_device
+	- add_device
+	- remove_device
+
+#### Device control
+- TuyaDeviceManager
+	- update_device_list_in_smart_home
+	- update_device_caches
+	- update_device_function_cache
+	- add_device_listener
+	- remove_device_listener
+	- get_device_info
+	- get_device_list_info
+	- remove_device
+	- remove_device_list
+	- get_factory_info
+	- factory_reset
+	- get_device_status
+	- get_device_list_status
+	- get_device_functions
+	- get_category_functions
+	- get_device_specification
+	- send_commands
+
+#### Home 
+- TuyaHomeManager
+	- update_device_cache
+	
+#### Assets
+- TuyaAssetManager
+	- get_device_list
+	- get_asset_info
+	- get_asset_list
+
 
 ## Possible scenarios
 
+
+
 - [HomeAssistant Tuya Plugin](https://github.com/tuya/tuya-home-assistant)
+
 - ...
+
 
 ## Prerequisite
 
@@ -38,7 +91,7 @@ Please check [Tuya IoT Platform Configuration Guide](https://github.com/tuya/tuy
 
 ## Sample code
 
-[OpenAPI Sample](https://github.com/tuya/tuya-iot-python-sdk/blob/master/example/api.py)
+[OpenAPI Sample](https://github.com/tuya/tuya-iot-python-sdk/blob/master/example/device.py)
 
 [Open IoT Hub Sample](https://github.com/tuya/tuya-iot-python-sdk/blob/master/example/mq.py)
 

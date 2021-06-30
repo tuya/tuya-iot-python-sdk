@@ -3,8 +3,7 @@
 
 # from distutils.core import setup
 from setuptools import setup, find_packages
-
-VERSION = '0.2.3'
+from tuya_iot import __version__
 
 tests_require = []
 
@@ -45,7 +44,7 @@ setup(
         'Programming Language :: Python :: Implementation :: PyPy'
     ],
 
-    version=VERSION,
+    version=__version__,
     install_requires=requirements(),
     tests_require=tests_require,
     test_suite='runtests.runtests',

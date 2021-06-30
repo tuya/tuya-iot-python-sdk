@@ -1,21 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-from example.env import *
-import time
-from tuya_iot import *
 
+import logging
+from env import ENDPOINT, ACCESS_ID, ACCESS_KEY, USERNAME, PASSWORD
+from tuya_iot import (
+    TuyaOpenAPI,
+    ProjectType,
+    TuyaOpenMQ,
+    TuyaDeviceManager,
+    TuyaHomeManager,
+    TuyaDeviceListener,
+    TuyaDevice,
+    TuyaTokenInfo,
+    tuya_logger
+)
+
+tuya_logger.setLevel(logging.DEBUG)
 # Init
 openapi = TuyaOpenAPI(ENDPOINT, ACCESS_ID, ACCESS_KEY, ProjectType.INDUSTY_SOLUTIONS)
+
 openapi.login(USERNAME, PASSWORD)
 openmq = TuyaOpenMQ(openapi)
 openmq.start()
 
-print('device test-> ', openapi.tokenInfo.uid)
+print("device test-> ", openapi.token_info.uid)
 # Get device list
 # assetManager = TuyaAssetManager(openapi)
 # devIds = assetManager.getDeviceList(ASSET_ID)
-
 
 
 # Update device status
@@ -23,22 +35,23 @@ deviceManager = TuyaDeviceManager(openapi, openmq)
 
 
 homeManager = TuyaHomeManager(openapi, openmq, deviceManager)
-homeManager.updateDeviceCache()
+homeManager.update_device_cache()
 # # deviceManager.updateDeviceCaches(devIds)
 # device = deviceManager.deviceMap.get(DEVICE_ID)
 
-class tuyaDeviceListener(TuyaDeviceListener):
-        
-        def updateDevice(self, device:TuyaDevice):
-            print("_update-->", device)
-    
-        def addDevice(self, device:TuyaDevice):
-            print("_add-->", device)
 
-        def removeDevice(self, id:str):
-            pass
-    
-deviceManager.addDeviceListener(tuyaDeviceListener())
+class tuyaDeviceListener(TuyaDeviceListener):
+    def update_device(self, device: TuyaDevice):
+        print("_update-->", device)
+
+    def add_device(self, device: TuyaDevice):
+        print("_add-->", device)
+
+    def remove_device(self, device_id: str):
+        pass
+
+
+deviceManager.add_device_listener(tuyaDeviceListener())
 
 # Turn on the light
 # deviceManager.sendCommands(device.id, [{'code': 'switch_led', 'value': True}])
@@ -55,6 +68,8 @@ while True:
     input()
     # flag = not flag
     # commands = {'commands': [{'code': 'switch_led', 'value': flag}]}
-    response = openapi.post('/v1.0/iot-03/users/token/{}'.format(openapi.tokenInfo.refreshToken))
-    openapi.tokenInfo = TuyaTokenInfo(response)
+    response = openapi.post(
+        "/v1.0/iot-03/users/token/{}".format(openapi.token_info.refresh_token)
+    )
+    openapi.token_info = TuyaTokenInfo(response)
     # openapi.post('/v1.0/iot-03/devices/{}/commands'.format(DEVICE_ID), commands)

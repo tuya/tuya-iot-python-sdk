@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
+"""Tuya asset api."""
 
 from typing import Any, Dict, List
 
@@ -7,7 +7,7 @@ from .openapi import TuyaOpenAPI
 
 
 class TuyaAssetManager:
-    """Asset Manager
+    """Asset Manager.
 
     Attributes:
       api: tuya openapi
@@ -16,55 +16,81 @@ class TuyaAssetManager:
     """
 
     def __init__(self, api: TuyaOpenAPI):
+        """Init Tuya asset manager."""
         self.api = api
 
     ##############################
     # Asset Management
     # https://developer.tuya.com/docs/cloud/industrial-general-asset-management/4872453fec?id=Kag2yom602i40
 
-    def getDeviceList(self, assetId: str) -> List[str]:
-        """Get devices by assetId
+    def get_device_list(self, asset_id: str) -> List[str]:
+        """Get devices by asset_id.
 
         Args:
-          assetId(str): asset id
+          asset_id(str): asset id
 
         Returns:
-          A list of device id. For
-          example:
-
-          [1111,2222]
-
+          A list of device ids.
         """
+        device_id_list = []
 
-        devIdList = []
-
-        hasNext = True
-        lastRowKey = ""
-        while hasNext:
+        has_next = True
+        last_row_key = ""
+        while has_next:
             response = self.api.get(
-                "/v1.0/iot-02/assets/{}/devices".format(assetId),
-                {"last_row_key": lastRowKey},
+                f"/v1.0/iot-02/assets/{asset_id}/devices",
+                {"last_row_key": last_row_key, "page_size": 100},
             )
             result = response.get("result", {})
-            hasNext = result.get("has_next", False)
-            lastRowKey = result.get("last_row_key", "")
+            has_next = result.get("has_next", False)
+            last_row_key = result.get("last_row_key", "")
             totalSize = result.get("total_size", 0)
 
-            if len(devIdList) > totalSize:  # Error
-                raise Exception("getDeviceList error, too many devices.")
+            if len(device_id_list) > totalSize:  # Error
+                raise Exception("get_device_list error, too many devices.")
 
             for item in result.get("list", []):
-                devIdList.append(item["device_id"])
+                device_id_list.append(item["device_id"])
 
-        return devIdList
+        return device_id_list
 
-    def getAssetInfo(self, assetId: str) -> Dict[str, Any]:
-        return self.api.get("/v1.0/iot-02/assets/{}".format(assetId))
+    def get_asset_info(self, asset_id: str) -> Dict[str, Any]:
+        """Get asset's info.
 
-    def getAssetList(self, parent_asset_id: str = "") -> Dict[str, Any]:
-        return self.api.get(
-            "/v1.0/iot-03/users/assets",
-            {"parent_asset_id": parent_asset_id, "page_no": 0, "page_size": 100},
-        )
+        Args:
+            asset_id(str): asset id
 
-    # TODO
+        Returns:
+            asset's info
+        """
+        return self.api.get("/v1.0/iot-02/assets/{}".format(asset_id))
+
+    def get_asset_list(self, parent_asset_id: str = "-1") -> list:
+        """Get under-nodes unser the current node.
+
+        Args:
+            parent_asset_id(str): current node
+
+        Retruns:
+            under-nodes
+        """
+        assets = []
+        has_next = True
+        last_row_key = ""
+
+        while has_next:
+            response = self.api.get(
+                f"/v1.0/iot-02/assets/{parent_asset_id}/sub-assets",
+                {
+                    # "parent_asset_id": parent_asset_id,
+                    "asset_id": parent_asset_id,
+                    "last_row_key": last_row_key, "page_size": 100},
+            )
+            result = response.get("result", {})
+            has_next = result.get("has_next", False)
+            last_row_key = result.get("last_row_key", "")
+
+            for item in result.get("list", []):
+                assets.append(item)
+
+        return assets

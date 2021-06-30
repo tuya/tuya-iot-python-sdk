@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
+"""Tuya device api."""
 
 import abc
 import time
@@ -9,6 +10,7 @@ from typing import Any, Dict, List
 from .openapi import TuyaOpenAPI
 from .openmq import TuyaOpenMQ
 from .project_type import ProjectType
+from .logging import logger
 
 PROTOCOL_DEVICE_REPORT = 4
 PROTOCOL_OTHER = 20
@@ -23,6 +25,16 @@ BIZCODE_P2P_SIGNAL = "p2pSignal"
 
 
 class TuyaDeviceFunction(SimpleNamespace):
+    """Tuya device's function.
+
+    Attributes:
+        code(str): function's code
+        desc(str): function's description
+        name(str): function's name
+        type(str): function's type, which may be Boolean, Integer, Enum, Json
+        values(dict): function's value range
+    """
+
     code: str
     desc: str
     name: str
@@ -31,14 +43,21 @@ class TuyaDeviceFunction(SimpleNamespace):
 
 
 class TuyaDeviceStatusRange(SimpleNamespace):
+    """Tuya device's status range.
+
+    Attributes:
+        code(str): status's code
+        type(str): status's type, which may be Boolean, Integer, Enum, Json
+        values(dict): status's value range
+    """
+
     code: str
     type: str
     values: str
 
 
 class TuyaDevice(SimpleNamespace):
-    """
-    Tuya Device
+    """Tuya Device.
 
     https://developer.tuya.com/en/docs/iot/open-api/api-reference/smart-home-devices-management/device-management?id=K9g6rfntdz78a#title-5-Return%20parameter
 
@@ -60,7 +79,9 @@ class TuyaDevice(SimpleNamespace):
           create_time: The first network pairing time of the device
           update_time: The update time of device status
 
-          status: Functional status of the device
+          status: Status set of the device
+          function: Instruction set of the device
+          status_range: Status value range set of the device
     """
 
     id: str
@@ -85,31 +106,51 @@ class TuyaDevice(SimpleNamespace):
     status_range: Dict[str, str] = {}
 
     def __eq__(self, other):
+        """If devices are the same one."""
         return self.id == other.id
 
 
 class TuyaDeviceListener(metaclass=abc.ABCMeta):
+    """Tuya device listener."""
+
     @abc.abstractclassmethod
-    def updateDevice(self, device: TuyaDevice):
+    def update_device(self, device: TuyaDevice):
+        """Update device info.
+
+        Args:
+            device(TuyaDevice): updated device info
+        """
         pass
 
     @abc.abstractclassmethod
-    def addDevice(self, device: TuyaDevice):
+    def add_device(self, device: TuyaDevice):
+        """Device Added.
+
+        Args:
+            device(TuyaDevice): Device added
+        """
         pass
 
     @abc.abstractclassmethod
-    def removeDevice(self, id: str):
+    def remove_device(self, device_id: str):
+        """Device removed.
+
+        Args:
+            device_id(str): device's id which removed
+        """
         pass
 
 
 class TuyaDeviceManager:
-    """Tuya Device Manager
+    """Tuya Device Manager.
 
-    This Manager support device control, including getting device status, specifications, the latest statuses, and sending commands
+    This Manager support device control, including getting device status,
+    specifications, the latest statuses, and sending commands
 
     """
 
     def __init__(self, api: TuyaOpenAPI, mq: TuyaOpenMQ):
+        """Tuya device manager init."""
         self.api = api
         self.mq = mq
         self.device_manage = (
@@ -118,33 +159,34 @@ class TuyaDeviceManager:
             else IndustrySolutionDeviceManage(api)
         )
 
-        mq.add_message_listener(self._onMessage)
-        self.deviceMap: Dict[str, TuyaDevice] = {}
+        mq.add_message_listener(self._on_message)
+        self.device_map: Dict[str, TuyaDevice] = {}
         self.device_listeners = set()
 
     def __del__(self):
-        self.mq.remove_message_listener(self._onMessage)
+        """Remove mqtt listener after object del."""
+        self.mq.remove_message_listener(self._on_message)
 
-    def _onMessage(self, msg: str):
-        print("device mq->", msg)
+    def _on_message(self, msg: str):
+        logger.debug(f"mq receive-> {msg}")
         protocol = msg.get("protocol", 0)
         data = msg.get("data", {})
         if protocol == PROTOCOL_DEVICE_REPORT:
-            self._onDeviceReport(data["devId"], data["status"])
+            self._on_device_report(data["devId"], data["status"])
         elif protocol == PROTOCOL_OTHER:
-            self._onDeviceOther(data["devId"], data["bizCode"], data)
+            self._on_device_other(data["devId"], data["bizCode"], data)
         else:
             pass
 
     def __update_device(self, device: TuyaDevice):
         for listener in self.device_listeners:
-            listener.updateDevice(device)
+            listener.update_device(device)
 
-    def _onDeviceReport(self, device_id: str, status: List):
-        device = self.deviceMap.get(device_id, None)
+    def _on_device_report(self, device_id: str, status: List):
+        device = self.device_map.get(device_id, None)
         if not device:
             return
-        print("_onDeviceReport->", status)
+        logger.debug(f"mq _on_device_report-> {status}")
         for item in status:
             if "code" in item and "value" in item:
                 code = item["code"]
@@ -153,47 +195,47 @@ class TuyaDeviceManager:
 
         self.__update_device(device)
 
-    def _onDeviceOther(self, device_id: str, bizCode: str, data: Dict[str, Any]):
-        print("_onDeviceReport->", device_id, "--", bizCode)
+    def _on_device_other(self, device_id: str, biz_code: str, data: Dict[str, Any]):
+        logger.debug(f"mq _on_device_other-> {device_id} -- {biz_code}")
 
         # bind device to user
-        if bizCode == BIZCODE_BIND_USER:
+        if biz_code == BIZCODE_BIND_USER:
             device_id = data["devId"]
             devIds = [device_id]
             # wait for es sync
             time.sleep(1)
 
-            self._updateDeviceListInfoCache(devIds)
-            self._updateDeviceListStatusCache(devIds)
+            self._update_device_list_info_cache(devIds)
+            self._update_device_list_status_cache(devIds)
 
-            self.updateDeviceFunctionCache(devIds)
+            self.update_device_function_cache(devIds)
 
-            if device_id in self.deviceMap.keys():
-                device = self.deviceMap.get(device_id)
+            if device_id in self.device_map.keys():
+                device = self.device_map.get(device_id)
                 for listener in self.device_listeners:
-                    listener.addDevice(device)
+                    listener.add_device(device)
 
         # device status update
-        device = self.deviceMap.get(device_id, None)
+        device = self.device_map.get(device_id, None)
         if not device:
             return
 
-        if bizCode == BIZCODE_ONLINE:
+        if biz_code == BIZCODE_ONLINE:
             device.online = True
             self.__update_device(device)
-        elif bizCode == BIZCODE_OFFLINE:
+        elif biz_code == BIZCODE_OFFLINE:
             device.online = False
             self.__update_device(device)
-        elif bizCode == BIZCODE_NAME_UPDATE:
+        elif biz_code == BIZCODE_NAME_UPDATE:
             device.name = data["bizData"]["name"]
             self.__update_device(device)
-        elif bizCode == BIZCODE_DPNAME_UPDATE:
+        elif biz_code == BIZCODE_DPNAME_UPDATE:
             pass
-        elif bizCode == BIZCODE_DELETE:
-            del self.deviceMap[device_id]
+        elif biz_code == BIZCODE_DELETE:
+            del self.device_map[device_id]
             for listener in self.device_listeners:
-                listener.removeDevice(device.id)
-        elif bizCode == BIZCODE_P2P_SIGNAL:
+                listener.remove_device(device.id)
+        elif biz_code == BIZCODE_P2P_SIGNAL:
             pass
         else:
             pass
@@ -201,9 +243,11 @@ class TuyaDeviceManager:
     ##############################
     # Memory Cache
 
-    def updateDeviceListInSmartHome(self):
-        """update devices status in Project type SmartHome"""
-        response = self.api.get("/v1.0/users/{}/devices".format(self.api.tokenInfo.uid))
+    def update_device_list_in_smart_home(self):
+        """Update devices status in project type SmartHome."""
+        response = self.api.get(
+            "/v1.0/users/{}/devices".format(self.api.token_info.uid)
+        )
         if response["success"]:
             for item in response["result"]:
                 device = TuyaDevice(**item)
@@ -214,49 +258,53 @@ class TuyaDeviceManager:
                         value = item_status["value"]
                         status[code] = value
                 device.status = status
-                self.deviceMap[item["id"]] = device
+                self.device_map[item["id"]] = device
 
-        self.updateDeviceFunctionCache()
+        self.update_device_function_cache()
 
-    def updateDeviceCaches(self, devIds: List[str]):
-        # TODO industry solution devIds max handle 20 devices once call
-        """update devices status in cache
+    def update_device_caches(self, devIds: List[str]):
+        """Update devices status in cache.
 
         Update devices info, devices status
 
         Args:
-          devIds(List[str]): devices' id
+          devIds(List[str]): devices' id, max 20 once call
         """
-        self._updateDeviceListInfoCache(devIds)
-        self._updateDeviceListStatusCache(devIds)
+        self._update_device_list_info_cache(devIds)
+        self._update_device_list_status_cache(devIds)
 
-        self.updateDeviceFunctionCache(devIds)
+        self.update_device_function_cache(devIds)
 
-    def _updateDeviceListInfoCache(self, devIds: List[str]):
+    def _update_device_list_info_cache(self, devIds: List[str]):
 
-        response = self.getDeviceListInfo(devIds)
+        response = self.get_device_list_info(devIds)
         result = response.get("result", {})
         for item in result.get("list", []):
             device_id = item["id"]
-            self.deviceMap[device_id] = TuyaDevice(**item)
+            self.device_map[device_id] = TuyaDevice(**item)
 
-    def _updateDeviceListStatusCache(self, devIds: List[str]):
+    def _update_device_list_status_cache(self, devIds: List[str]):
 
-        response = self.getDeviceListStatus(devIds)
+        response = self.get_device_list_status(devIds)
         for item in response.get("result", []):
             device_id = item["id"]
             for status in item["status"]:
                 if "code" in status and "value" in status:
                     code = status["code"]
                     value = status["value"]
-                    device = self.deviceMap[device_id]
+                    device = self.device_map[device_id]
                     device.status[code] = value
 
-    def updateDeviceFunctionCache(self, devIds: list = []):
-        device_map = filter(lambda d: d.id in devIds, self.deviceMap.values()) if len(devIds) > 0 else self.deviceMap.values()
+    def update_device_function_cache(self, devIds: list = []):
+        """Update device function cache."""
+        device_map = (
+            filter(lambda d: d.id in devIds, self.device_map.values())
+            if len(devIds) > 0
+            else self.device_map.values()
+        )
 
         for device in device_map:
-            response = self.getDeviceSpecification(device.id)
+            response = self.get_device_specification(device.id)
             if response.get("success"):
                 result = response.get("result", {})
                 functionMap = {}
@@ -272,10 +320,12 @@ class TuyaDeviceManager:
                 device.function = functionMap
                 device.status_range = status_range
 
-    def addDeviceListener(self, listener: TuyaDeviceListener):
+    def add_device_listener(self, listener: TuyaDeviceListener):
+        """Add device listener."""
         self.device_listeners.add(listener)
 
-    def removeDeviceListener(self, listener: TuyaDeviceListener):
+    def remove_device_listener(self, listener: TuyaDeviceListener):
+        """Remove device listener."""
         self.device_listeners.remove(listener)
 
     ##############################
@@ -284,16 +334,16 @@ class TuyaDeviceManager:
     # Device Management
     # https://developer.tuya.com/docs/cloud/industrial-general-device-management/2fed20dbd9?id=Kag2t5om665oi
 
-    def getDeviceInfo(self, device_id: str) -> Dict[str, Any]:
-        """Get device info
+    def get_device_info(self, device_id: str) -> Dict[str, Any]:
+        """Get device info.
 
         Args:
           device_id(str): device id
         """
-        return self.device_manage.getDeviceInfo(device_id)
+        return self.device_manage.get_device_info(device_id)
 
-    def getDeviceListInfo(self, devIds: List[str]) -> Dict[str, Any]:
-        """Get devices info
+    def get_device_list_info(self, devIds: List[str]) -> Dict[str, Any]:
+        """Get devices info.
 
         Args:
           device_id(list): device id list
@@ -302,7 +352,7 @@ class TuyaDeviceManager:
             response: response body
 
         """
-        return self.device_manage.getDeviceListInfo(devIds)
+        return self.device_manage.get_device_list_info(devIds)
 
     # def updateDeviceInfo(self, device_id: str, info) -> Dict[str, Any]:
     # """Update device information
@@ -317,43 +367,10 @@ class TuyaDeviceManager:
     #     response: response body
 
     # """
-    # return self.device_manage.getDeviceInfo(device_id, info)
+    # return self.device_manage.get_device_info(device_id, info)
 
-    def removeDevice(self, device_id: str) -> Dict[str, Any]:
-        """Remove device
-
-        Args:
-          device_id(str): device id
-
-        Returns:
-            response: response body
-        """
-        return self.device_manage.removeDevice(device_id)
-
-    def removeDeviceList(self, devIds: List[str]) -> Dict[str, Any]:
-        """Remove devices
-
-        Args:
-          device_id(list): device id list
-
-        Returns:
-            response: response body
-        """
-        return self.device_manage.removeDeviceList(devIds)
-
-    def getFactoryInfo(self, device_id: str) -> Dict[str, Any]:
-        """Remove devices factory infos
-
-        Args:
-          device_id(list): device id list
-
-        Returns:
-            response: response body
-        """
-        return self.device_manage.getFactoryInfo(device_id)
-
-    def factoryReset(self, device_id: str) -> Dict[str, Any]:
-        """Reset device to factory status
+    def remove_device(self, device_id: str) -> Dict[str, Any]:
+        """Remove device.
 
         Args:
           device_id(str): device id
@@ -361,13 +378,46 @@ class TuyaDeviceManager:
         Returns:
             response: response body
         """
-        return self.device_manage.factoryReset(device_id)
+        return self.device_manage.remove_device(device_id)
+
+    def remove_device_list(self, devIds: List[str]) -> Dict[str, Any]:
+        """Remove devices.
+
+        Args:
+          device_id(list): device id list
+
+        Returns:
+            response: response body
+        """
+        return self.device_manage.remove_device_list(devIds)
+
+    def get_factory_info(self, device_id: str) -> Dict[str, Any]:
+        """Get device's factory info.
+
+        Args:
+          device_id(list): device id list
+
+        Returns:
+            response: response body
+        """
+        return self.device_manage.get_factory_info(device_id)
+
+    def factory_reset(self, device_id: str) -> Dict[str, Any]:
+        """Reset device to factory setting.
+
+        Args:
+          device_id(str): device id
+
+        Returns:
+            response: response body
+        """
+        return self.device_manage.factory_reset(device_id)
 
     # Device Status
     # https://developer.tuya.com/docs/cloud/industrial-general-device-status-query/f8108a55e3?id=Kag2t60ii54jf
 
-    def getDeviceStatus(self, device_id: str) -> Dict[str, Any]:
-        """Get device status
+    def get_device_status(self, device_id: str) -> Dict[str, Any]:
+        """Get device status.
 
         Args:
           device_id(str): device id
@@ -375,10 +425,10 @@ class TuyaDeviceManager:
         Returns:
             response: response body
         """
-        return self.device_manage.getDeviceStatus(device_id)
+        return self.device_manage.get_device_status(device_id)
 
-    def getDeviceListStatus(self, devIds: List[str]) -> Dict[str, Any]:
-        """Get devices status
+    def get_device_list_status(self, devIds: List[str]) -> Dict[str, Any]:
+        """Get devices status.
 
         Args:
           devIds(list): device ids
@@ -386,15 +436,15 @@ class TuyaDeviceManager:
         Returns:
             response: response body
         """
-        return self.device_manage.getDeviceListStatus(devIds)
+        return self.device_manage.get_device_list_status(devIds)
 
     # Device Control
     # https://developer.tuya.com/docs/cloud/industrial-general-device-control/5d2e6fbe8e?id=Kag2t6n3ony2c
 
-    def getDeviceFunctions(self, device_id: str) -> Dict[str, Any]:
-        """Get the command set supported by the device
+    def get_device_functions(self, device_id: str) -> Dict[str, Any]:
+        """Get the Instruction set supported by the device.
 
-        Get the command set supported by the device based on the device ID.
+        Get the Instruction set supported by the device based on the device ID.
 
         Args:
           device_id: device id
@@ -402,10 +452,10 @@ class TuyaDeviceManager:
         Returns:
             response: response body
         """
-        return self.device_manage.getDeviceFunctions(device_id)
+        return self.device_manage.get_device_functions(device_id)
 
-    def getCategoryFunctions(self, categoryId: str) -> Dict[str, Any]:
-        """Get the instruction set supported by the category
+    def get_category_functions(self, categoryId: str) -> Dict[str, Any]:
+        """Get the instruction set supported by the category.
 
         Get the instruction set supported by the category based on the product category Code
 
@@ -415,10 +465,10 @@ class TuyaDeviceManager:
         Returns:
             response: response body
         """
-        return self.device_manage.getCategoryFunctions(categoryId)
+        return self.device_manage.get_category_functions(categoryId)
 
-    def getDeviceSpecification(self, device_id: str) -> Dict[str, str]:
-        """Get device specification attributes
+    def get_device_specification(self, device_id: str) -> Dict[str, str]:
+        """Get device specification attributes.
 
         Obtain device specification attributes according to device ID, including command set and status set.
 
@@ -428,10 +478,12 @@ class TuyaDeviceManager:
         Returns:
             response: response body
         """
-        return self.device_manage.getDeviceSpecification(device_id)
+        return self.device_manage.get_device_specification(device_id)
 
-    def sendCommands(self, device_id: str, commands: List[str]) -> Dict[str, Any]:
-        """Send commands
+    def send_commands(self,
+                      device_id: str,
+                      commands: List[str]) -> Dict[str, Any]:
+        """Send commands.
 
         Send command to the device.For example:
           {"commands": [{"code": "switch_led","value": true}]}
@@ -443,12 +495,7 @@ class TuyaDeviceManager:
         Returns:
             response: response body
         """
-        return self.device_manage.sendCommands(device_id, commands)
-
-    # Device Registration
-    # https://developer.tuya.com/en/docs/cloud/industrial-general-device-registration/41bd0ed112?id=Kag2t66tjhp2i
-
-    # TODO
+        return self.device_manage.send_commands(device_id, commands)
 
     ##############################
 
@@ -460,161 +507,168 @@ class DeviceManage(metaclass=abc.ABCMeta):
         self.api = api
 
     @abc.abstractclassmethod
-    def updateDeviceCaches(self, devIds: List[str]):
+    def update_device_caches(self, devIds: List[str]):
         pass
 
     @abc.abstractclassmethod
-    def getDeviceInfo(self, device_id: str) -> Dict[str, Any]:
+    def get_device_info(self, device_id: str) -> Dict[str, Any]:
         pass
 
     @abc.abstractclassmethod
-    def getDeviceListInfo(self, devIds: List[str]) -> Dict[str, Any]:
+    def get_device_list_info(self, devIds: List[str]) -> Dict[str, Any]:
         pass
 
     @abc.abstractclassmethod
-    def getDeviceStatus(self, device_id: str) -> Dict[str, Any]:
+    def get_device_status(self, device_id: str) -> Dict[str, Any]:
         pass
 
     @abc.abstractclassmethod
-    def getDeviceListStatus(self, devIds: List[str]) -> Dict[str, Any]:
+    def get_device_list_status(self, devIds: List[str]) -> Dict[str, Any]:
         pass
 
     @abc.abstractclassmethod
-    def getFactoryInfo(self, device_id: str) -> Dict[str, Any]:
+    def get_factory_info(self, device_id: str) -> Dict[str, Any]:
         pass
 
     @abc.abstractclassmethod
-    def factoryReset(self, device_id: str) -> Dict[str, Any]:
+    def factory_reset(self, device_id: str) -> Dict[str, Any]:
         pass
 
     @abc.abstractclassmethod
-    def removeDevice(self, device_id: str) -> Dict[str, Any]:
+    def remove_device(self, device_id: str) -> Dict[str, Any]:
         pass
 
     @abc.abstractclassmethod
-    def removeDeviceList(self, devIds: List[str]) -> Dict[str, Any]:
+    def remove_device_list(self, devIds: List[str]) -> Dict[str, Any]:
         pass
 
     @abc.abstractclassmethod
-    def getDeviceFunctions(self, device_id: str) -> Dict[str, Any]:
+    def get_device_functions(self, device_id: str) -> Dict[str, Any]:
         pass
 
     @abc.abstractclassmethod
-    def getCategoryFunctions(self, categoryId: str) -> Dict[str, Any]:
+    def get_category_functions(self, categoryId: str) -> Dict[str, Any]:
         pass
 
     @abc.abstractclassmethod
-    def getDeviceSpecification(self, device_id: str) -> Dict[str, str]:
+    def get_device_specification(self, device_id: str) -> Dict[str, str]:
         pass
 
     @abc.abstractclassmethod
-    def sendCommands(self, device_id: str, commands: List[str]) -> Dict[str, Any]:
+    def send_commands(self, device_id: str, commands: List[str]) -> Dict[str, Any]:
         pass
 
 
 class SmartHomeDeviceManage(DeviceManage):
-    def updateDeviceCaches(self, devIds: List[str]):
+    def update_device_caches(self, devIds: List[str]):
         pass
 
-    def getDeviceInfo(self, device_id: str) -> Dict[str, Any]:
+    def get_device_info(self, device_id: str) -> Dict[str, Any]:
         response = self.api.get("/v1.0/devices/{}".format(device_id))
         response["result"].pop("status")
         return response
 
-    def getDeviceListInfo(self, devIds: List[str]) -> Dict[str, Any]:
-        response = self.api.get("/v1.0/devices/", {"device_ids": ",".join(devIds)})
+    def get_device_list_info(self, devIds: List[str]) -> Dict[str, Any]:
+        response = self.api.get(
+            "/v1.0/devices/", {"device_ids": ",".join(devIds)})
         if response["success"]:
             for info in response["result"]["devices"]:
                 info.pop("status")
         response["result"]["list"] = response["result"]["devices"]
         return response
 
-    def getDeviceStatus(self, device_id: str) -> Dict[str, Any]:
+    def get_device_status(self, device_id: str) -> Dict[str, Any]:
         response = self.api.get("/v1.0/devices/{}".format(device_id))
         response["result"] = response["result"]["status"]
         return response
 
-    def getDeviceListStatus(self, devIds: List[str]) -> Dict[str, Any]:
-        response = self.api.get("/v1.0/devices/", {"device_ids": ",".join(devIds)})
+    def get_device_list_status(self, devIds: List[str]) -> Dict[str, Any]:
+        response = self.api.get(
+            "/v1.0/devices/", {"device_ids": ",".join(devIds)})
         status_list = []
         if response["success"]:
             for info in response["result"]["devices"]:
-                status_list.append({"id": info["id"], "status": info["status"]})
+                status_list.append(
+                    {"id": info["id"], "status": info["status"]})
 
         response["result"] = status_list
         return response
 
-    def getFactoryInfo(self, devIds: str) -> Dict[str, Any]:
+    def get_factory_info(self, devIds: str) -> Dict[str, Any]:
         return self.api.get(
             "/v1.0/devices/factory-infos", {"device_ids": ",".join(devIds)}
         )
 
-    def factoryReset(self, device_id: str) -> Dict[str, Any]:
+    def factory_reset(self, device_id: str) -> Dict[str, Any]:
         return self.api.post("/v1.0/devices/{}/reset-factory".format(device_id))
 
-    def removeDevice(self, device_id: str) -> Dict[str, Any]:
+    def remove_device(self, device_id: str) -> Dict[str, Any]:
         return self.api.delete("/v1.0/devices/{}".format(device_id))
 
-    def removeDeviceList(self, devIds: List[str]) -> Dict[str, Any]:
+    def remove_device_list(self, devIds: List[str]) -> Dict[str, Any]:
         raise Exception("Api not support.")
 
-    def getDeviceFunctions(self, device_id: str) -> Dict[str, Any]:
+    def get_device_functions(self, device_id: str) -> Dict[str, Any]:
         return self.api.get("/v1.0/devices/{}/functions".format(device_id))
 
-    def getCategoryFunctions(self, categoryId: str) -> Dict[str, Any]:
+    def get_category_functions(self, categoryId: str) -> Dict[str, Any]:
         return self.api.get("/v1.0/functions/{}".format(categoryId))
 
     # https://developer.tuya.com/en/docs/cloud/device-control?id=K95zu01ksols7#title-27-Get%20the%20specifications%20and%20properties%20of%20the%20device%2C%20including%20the%20instruction%20set%20and%20status%20set
-    def getDeviceSpecification(self, device_id: str) -> Dict[str, str]:
+    def get_device_specification(self, device_id: str) -> Dict[str, str]:
         return self.api.get("/v1.0/devices/{}/specifications".format(device_id))
 
-    def sendCommands(self, device_id: str, commands: List[str]) -> Dict[str, Any]:
+    def send_commands(self, device_id: str, commands: List[str]) -> Dict[str, Any]:
         return self.api.post(
-            "/v1.0/devices/{}/commands".format(device_id), {"commands": commands}
+            "/v1.0/devices/{}/commands".format(
+                device_id), {"commands": commands}
         )
 
 
 class IndustrySolutionDeviceManage(DeviceManage):
-    def updateDeviceCaches(self, devIds: List[str]):
+    def update_device_caches(self, devIds: List[str]):
         pass
 
-    def getDeviceInfo(self, device_id: str) -> Dict[str, Any]:
+    def get_device_info(self, device_id: str) -> Dict[str, Any]:
         return self.api.get("/v1.0/iot-03/devices/{}".format(device_id))
 
-    def getDeviceListInfo(self, devIds: List[str]) -> Dict[str, Any]:
+    def get_device_list_info(self, devIds: List[str]) -> Dict[str, Any]:
         return self.api.get("/v1.0/iot-03/devices", {"device_ids": ",".join(devIds)})
 
-    def getDeviceStatus(self, device_id: str) -> Dict[str, Any]:
+    def get_device_status(self, device_id: str) -> Dict[str, Any]:
         return self.api.get("/v1.0/iot-03/devices/{}/status".format(device_id))
 
-    def getDeviceListStatus(self, devIds: List[str]) -> Dict[str, Any]:
+    def get_device_list_status(self, devIds: List[str]) -> Dict[str, Any]:
         return self.api.get(
             "/v1.0/iot-03/devices/status", {"device_ids": ",".join(devIds)}
         )
 
-    def getFactoryInfo(self, device_id: str) -> Dict[str, Any]:
+    def get_factory_info(self, device_id: str) -> Dict[str, Any]:
         return self.api.get("/v1.0/iot-03/devices/factory-infos", device_id)
 
-    def factoryReset(self, device_id: str) -> Dict[str, Any]:
-        return self.api.delete("/v1.0/iot-03/devices/{}/actions/reset".format(device_id))
+    def factory_reset(self, device_id: str) -> Dict[str, Any]:
+        return self.api.delete(
+            "/v1.0/iot-03/devices/{}/actions/reset".format(device_id)
+        )
 
-    def removeDevice(self, device_id: str) -> Dict[str, Any]:
+    def remove_device(self, device_id: str) -> Dict[str, Any]:
         return self.api.delete("/v1.0/iot-03/devices/{}".format(device_id))
 
-    def removeDeviceList(self, devIds: List[str]) -> Dict[str, Any]:
+    def remove_device_list(self, devIds: List[str]) -> Dict[str, Any]:
         return self.api.delete("/v1.0/iot-03/devices", {"device_ids": ",".join(devIds)})
 
-    def getDeviceFunctions(self, device_id: str) -> Dict[str, Any]:
+    def get_device_functions(self, device_id: str) -> Dict[str, Any]:
         return self.api.get("/v1.0/iot-03/devices/{}/functions".format(device_id))
 
-    def getCategoryFunctions(self, categoryId: str) -> Dict[str, Any]:
+    def get_category_functions(self, categoryId: str) -> Dict[str, Any]:
         return self.api.get("/v1.0/iot-03/categories/{}/functions".format(categoryId))
 
     # https://developer.tuya.com/en/docs/cloud/device-control?id=K95zu01ksols7#title-27-Get%20the%20specifications%20and%20properties%20of%20the%20device%2C%20including%20the%20instruction%20set%20and%20status%20set
-    def getDeviceSpecification(self, device_id: str) -> Dict[str, str]:
+    def get_device_specification(self, device_id: str) -> Dict[str, str]:
         return self.api.get("/v1.0/iot-03/devices/{}/specification".format(device_id))
 
-    def sendCommands(self, device_id: str, commands: List[str]) -> Dict[str, Any]:
+    def send_commands(self, device_id: str, commands: List[str]) -> Dict[str, Any]:
         return self.api.post(
-            "/v1.0/iot-03/devices/{}/commands".format(device_id), {"commands": commands}
+            "/v1.0/iot-03/devices/{}/commands".format(
+                device_id), {"commands": commands}
         )

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-from tuya_iot import TuyaOpenAPI
+import logging
+from tuya_iot import TuyaOpenAPI, tuya_logger
 
 from env import *
 
+tuya_logger.setLevel(logging.DEBUG)
 # Init
 openapi = TuyaOpenAPI(ENDPOINT, ACCESS_ID, ACCESS_KEY)
 openapi.login(USERNAME, PASSWORD)
