@@ -7,6 +7,7 @@ from .openmq import TuyaOpenMQ
 from .project_type import ProjectType
 from .asset import TuyaAssetManager
 from .device import TuyaDeviceManager
+from typing import Any, Dict
 
 
 class TuyaHomeManager:
@@ -55,3 +56,32 @@ class TuyaHomeManager:
                                     asset["asset_id"],
                                     device_ids)
         return device_ids
+
+    def query_scenes(self) -> list:
+        """Query home scenes, only in SMART_HOME project type."""
+        if self.api.project_type == ProjectType.INDUSTY_SOLUTIONS:
+            return []
+
+        response = self.api.get(f"/v1.0/users/{self.api.token_info.uid}/homes")
+        if response.get("success", False):
+            homes = response.get("result")
+            scenes = []
+            for home in homes:
+                home_id = home["home_id"]
+                scenes_response = self.api.get(f"/v1.0/homes/{home_id}/scenes")
+
+                if scenes_response.get("success", False):
+                    scenes.extend(scenes_response.get("result"))
+
+            return scenes
+
+        return []
+
+    def trigger_scene(self,
+                      home_id: str,
+                      scene_id: str) -> Dict[str, Any]:
+        """Trigger home scene"""
+        if self.api.project_type == ProjectType.SMART_HOME:
+            return self.api.post(f"/v1.0/homes/{home_id}/scenes/{scene_id}/trigger")
+
+        return dict()

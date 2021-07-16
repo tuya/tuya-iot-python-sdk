@@ -26,6 +26,7 @@ class TuyaTokenInfo:
         expire_time: Valid period in seconds.
         refresh_token: Refresh token.
         uid: Tuya user ID.
+        platform_url: user region platform url
     """
 
     def __init__(self, tokenResponse: Dict[str, Any] = {}):
@@ -39,6 +40,7 @@ class TuyaTokenInfo:
         self.access_token = result.get("access_token", "")
         self.refresh_token = result.get("refresh_token", "")
         self.uid = result.get("uid", "")
+        self.platform_url = result.get("platform_url", "")
 
 
 class TuyaOpenAPI:
