@@ -60,6 +60,8 @@ With diversified devices and industries, Tuya Cloud Development Platform opens b
 #### Home 
 - TuyaHomeManager
 	- update_device_cache
+	- query_scenes
+	- trigger_scene
 	
 #### Assets
 - TuyaAssetManager

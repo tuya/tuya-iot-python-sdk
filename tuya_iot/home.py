@@ -8,7 +8,24 @@ from .project_type import ProjectType
 from .asset import TuyaAssetManager
 from .device import TuyaDeviceManager
 from typing import Any, Dict
+from types import SimpleNamespace
 
+
+class TuyaScene(SimpleNamespace):
+    """Tuya Scene.
+
+    Attributes:
+        actions(list): scene actions
+        enabled(bool): is scene enabled
+        name(str): scene name
+        scene_id(dict): scene id
+        home_id(int): scene home id
+    """
+    actions: list
+    enabled: bool
+    name: str
+    scene_id: str
+    home_id: int
 
 class TuyaHomeManager:
     """Tuya Home Manager."""
@@ -71,7 +88,10 @@ class TuyaHomeManager:
                 scenes_response = self.api.get(f"/v1.0/homes/{home_id}/scenes")
 
                 if scenes_response.get("success", False):
-                    scenes.extend(scenes_response.get("result"))
+                    for scene in scenes_response.get("result"):
+                        __tuya_scene = TuyaScene(**scene)
+                        __tuya_scene.home_id = home_id
+                        scenes.append(__tuya_scene)
 
             return scenes
 
