@@ -243,7 +243,7 @@ class TuyaOpenAPI:
             headers["dev_channel"] = self.dev_channel
 
         logger.debug(
-            f"Request: method = {method}, url = {self.endpoint + path}, params = {params}, body = {filter_logger(body)}, headers = *** "
+            f"Request: method = {method}, url = {self.endpoint + path}, params = {params}, body = {filter_logger(body)}, t = {int(time.time()*1000)} "
         )
 
         response = self.session.request(

@@ -16,16 +16,8 @@ default_handler.setFormatter(logging.Formatter(
 logger.addHandler(default_handler)
 tuya_logger = logger
 
-ACCESS_TOKEN = "access_token"
-CLIENT_ID = "client_id"
-IP = "ip"
-LAT = "lat"
-LINK_ID = "link_id"
-LOCAL_KEY = "local_key"
-LON = "lon"
-PASSWORD = "password"
-REFRESH_TOKEN = "refresh_token"
-UID = "uid"
+filter_list = ["access_token", "client_id", "ip", "lat", "link_id",
+               "local_key", "lon", "password", "refresh_token", "uid"]
 
 STAR = "***"
 
@@ -40,47 +32,13 @@ def filter_logger(result_info: Dict[str, Any]):
         filter_info = filter_info_original
     if type(filter_info) == list:
         for item in filter_info:
-            if ACCESS_TOKEN in item:
-                item[ACCESS_TOKEN] = STAR
-            if CLIENT_ID in filter_info:
-                item[CLIENT_ID] = STAR
-            if IP in item:
-                item[IP] = STAR
-            if LAT in item:
-                item[LAT] = STAR
-            if LINK_ID in item:
-                item[LINK_ID] = STAR
-            if LOCAL_KEY in item:
-                item[LOCAL_KEY] = STAR
-            if LON in item:
-                item[LON] = STAR
-            if PASSWORD in filter_info:
-                item[PASSWORD] = STAR
-            if REFRESH_TOKEN in filter_info:
-                item[REFRESH_TOKEN] = STAR
-            if UID in item:
-                item[UID] = STAR
+            for filter_key in filter_list:
+                if filter_key in item:
+                    item[filter_key] = STAR
 
     elif type(filter_info) == dict:
-        if ACCESS_TOKEN in filter_info:
-            filter_info[ACCESS_TOKEN] = STAR
-        if CLIENT_ID in filter_info:
-            filter_info[CLIENT_ID] = STAR
-        if IP in filter_info:
-            filter_info[IP] = STAR
-        if LAT in filter_info:
-            filter_info[LAT] = STAR
-        if LINK_ID in filter_info:
-            filter_info[LINK_ID] = STAR
-        if LOCAL_KEY in filter_info:
-            filter_info[LOCAL_KEY] = STAR
-        if LON in filter_info:
-            filter_info[LON] = STAR
-        if PASSWORD in filter_info:
-            filter_info[PASSWORD] = STAR
-        if REFRESH_TOKEN in filter_info:
-            filter_info[REFRESH_TOKEN] = STAR
-        if UID in filter_info:
-            filter_info[UID] = STAR
+        for filter_key in filter_list:
+            if filter_key in filter_info:
+                filter_info[filter_key] = STAR
 
     return filter_info_original
