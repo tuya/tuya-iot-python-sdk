@@ -12,7 +12,7 @@ import requests
 from typing import Tuple
 from typing import Any, Dict, Optional
 from .project_type import ProjectType
-from .logging import logger
+from .logging import logger, filter_logger
 from .version import VERSION
 
 TUYA_ERROR_CODE_TOKEN_INVALID = 1010
@@ -243,8 +243,9 @@ class TuyaOpenAPI:
             headers["dev_channel"] = self.dev_channel
 
         logger.debug(
-            f"Request: method = {method}, url = {self.endpoint + path}, params = {params}, body = {body}, headers = {headers}"
+            f"Request: method = {method}, url = {self.endpoint + path}, params = {params}, body = {filter_logger(body)}, t = {int(time.time()*1000)} "
         )
+
         response = self.session.request(
             method, self.endpoint + path, params=params, json=body, headers=headers
         )
@@ -256,8 +257,9 @@ class TuyaOpenAPI:
             return None
 
         result = response.json()
+
         logger.debug(
-            f"Response: {json.dumps(result, ensure_ascii=False, indent=2)}"
+            f"Response: {json.dumps(filter_logger(result), ensure_ascii=False, indent=2)}"
         )
 
         if result.get("code", -1) == TUYA_ERROR_CODE_TOKEN_INVALID:
