@@ -159,15 +159,15 @@ class TuyaDeviceManager:
             else IndustrySolutionDeviceManage(api)
         )
 
-        mq.add_message_listener(self._on_message)
+        mq.add_message_listener(self.on_message)
         self.device_map: Dict[str, TuyaDevice] = {}
         self.device_listeners = set()
 
     def __del__(self):
         """Remove mqtt listener after object del."""
-        self.mq.remove_message_listener(self._on_message)
+        self.mq.remove_message_listener(self.on_message)
 
-    def _on_message(self, msg: str):
+    def on_message(self, msg: str):
         logger.debug(f"mq receive-> {msg}")
         protocol = msg.get("protocol", 0)
         data = msg.get("data", {})
