@@ -18,8 +18,8 @@ With diversified devices and industries, Tuya Cloud Development Platform opens b
 ## Features
 ### Base APIs
 - TuyaOpenAPI
-	- login
-	- is_login
+	- connect
+	- is_connect
 	- get
 	- post
 	- put
@@ -28,7 +28,7 @@ With diversified devices and industries, Tuya Cloud Development Platform opens b
 - TuyaOpenQ
 	- start
 	- stop
-	- add_message_listner
+	- add_message_listener
 	- remove_message_listener
 
 ### APIs

@@ -9,7 +9,7 @@ tuya_logger.setLevel(logging.DEBUG)
 
 # Init
 openapi = TuyaOpenAPI(ENDPOINT, ACCESS_ID, ACCESS_KEY)
-openapi.login(USERNAME, PASSWORD)
+openapi.connect(USERNAME, PASSWORD)
 
 
 # Receive device message

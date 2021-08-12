@@ -9,8 +9,8 @@ from typing import Any, Dict, List
 
 from .openapi import TuyaOpenAPI
 from .openmq import TuyaOpenMQ
-from .project_type import ProjectType
-from .logging import logger
+from .tuya_enums import DevelopMethod
+from .openlogging import logger
 
 PROTOCOL_DEVICE_REPORT = 4
 PROTOCOL_OTHER = 20
@@ -155,7 +155,7 @@ class TuyaDeviceManager:
         self.mq = mq
         self.device_manage = (
             SmartHomeDeviceManage(api)
-            if (api.project_type == ProjectType.SMART_HOME)
+            if (api.project_type == DevelopMethod.SMART_HOME)
             else IndustrySolutionDeviceManage(api)
         )
 
