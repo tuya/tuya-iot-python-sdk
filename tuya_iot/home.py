@@ -44,7 +44,7 @@ class TuyaHomeManager:
     def update_device_cache(self):
         """Update home's devices cache."""
         self.device_manager.device_map.clear()
-        if self.api.project_type == DevelopMethod.CUSTOM:
+        if self.api.develop_method == DevelopMethod.CUSTOM:
             device_ids = []
             asset_manager = TuyaAssetManager(self.api)
 
@@ -56,7 +56,7 @@ class TuyaHomeManager:
             #     device_ids += asset_manager.get_device_list(asset_id)
             if len(device_ids) > 0:
                 self.device_manager.update_device_caches(device_ids)
-        elif self.api.project_type == DevelopMethod.SMART_HOME:
+        elif self.api.develop_method == DevelopMethod.SMART_HOME:
             self.device_manager.update_device_list_in_smart_home()
 
     def __query_device_ids(
@@ -77,7 +77,7 @@ class TuyaHomeManager:
 
     def query_scenes(self) -> list:
         """Query home scenes, only in SMART_HOME project type."""
-        if self.api.project_type == DevelopMethod.CUSTOM:
+        if self.api.develop_method == DevelopMethod.CUSTOM:
             return []
 
         response = self.api.get(f"/v1.0/users/{self.api.token_info.uid}/homes")
@@ -102,7 +102,7 @@ class TuyaHomeManager:
                       home_id: str,
                       scene_id: str) -> Dict[str, Any]:
         """Trigger home scene"""
-        if self.api.project_type == DevelopMethod.SMART_HOME:
+        if self.api.develop_method == DevelopMethod.SMART_HOME:
             return self.api.post(f"/v1.0/homes/{home_id}/scenes/{scene_id}/trigger")
 
         return dict()

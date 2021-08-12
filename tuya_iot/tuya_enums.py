@@ -37,3 +37,10 @@ class TuyaCloudPulsarWSEndpoint:
     AMERICA = "wss://mqe.tuyaus.com:8285/"
     EUROPE = "wss://mqe.tuyaeu.com:8285/"
     INDIA = "wss://mqe.tuyain.com:8285/"
+
+
+class TuyaCloudPulsarTopic:
+    """Tuya Cloud Pulsar Topic."""
+
+    RELEASE = "event"
+    TEST = "event-test"

@@ -1,5 +1,6 @@
 """This module has components that are used for testing to B connect."""
 import logging
+from tuya_iot.tuya_enums import TuyaCloudPulsarTopic
 from tuya_iot import (
     TuyaOpenAPI,
     DevelopMethod,
@@ -7,6 +8,7 @@ from tuya_iot import (
     TuyaOpenPulsar,
     TuyaCloudPulsarWSEndpoint,
     TuyaCloudOpenAPIEndpoint,
+    TuyaCloudPulsarTopic,
     TUYA_LOGGER
 )
 
@@ -28,7 +30,8 @@ response = openapi.get("/v1.0/statistics-datas-survey", dict())
 # Init Message Queue 
 open_pulsar = TuyaOpenPulsar(ACCESS_ID,
                              ACCESS_KEY,
-                             TuyaCloudPulsarWSEndpoint.CHINA)
+                             TuyaCloudPulsarWSEndpoint.CHINA,
+                             TuyaCloudPulsarTopic.TEST)
 # Add Message Queue listener
 open_pulsar.add_message_listener(lambda msg: print(f"---\nexample receive: {msg}"))
 

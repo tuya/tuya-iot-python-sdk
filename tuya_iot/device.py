@@ -155,7 +155,7 @@ class TuyaDeviceManager:
         self.mq = mq
         self.device_manage = (
             SmartHomeDeviceManage(api)
-            if (api.project_type == DevelopMethod.SMART_HOME)
+            if (api.develop_method == DevelopMethod.SMART_HOME)
             else IndustrySolutionDeviceManage(api)
         )
 
