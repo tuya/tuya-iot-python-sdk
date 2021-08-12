@@ -13,8 +13,8 @@ from paho.mqtt import client as mqtt
 from Crypto.Cipher import AES
 
 from .openapi import TuyaOpenAPI
-from .project_type import ProjectType
-from .logging import logger
+from .tuya_enums import DevelopMethod
+from .openlogging import logger
 
 LINK_ID = "tuya-iot-app-sdk-python.{}".format(uuid.uuid1())
 GCM_TAG_LENGTH = 16
@@ -30,7 +30,7 @@ class TuyaMQConfig:
     password = ""
     source_topic = {}
     sink_topic = {}
-    expireTime = 0
+    expire_time = 0
 
     def __init__(self, mqConfigResponse: Dict[str, Any] = {}):
         """Init TuyaMQConfig."""
@@ -42,7 +42,7 @@ class TuyaMQConfig:
         self.password = result.get("password", "")
         self.source_topic = result.get("source_topic", {})
         self.sink_topic = result.get("sink_topic", {})
-        self.expireTime = result.get("expire_time", 0)
+        self.expire_time = result.get("expire_time", 0)
 
 
 class TuyaOpenMQ(threading.Thread):
@@ -60,6 +60,7 @@ class TuyaOpenMQ(threading.Thread):
         self.api: TuyaOpenAPI = api
         self._stop_event = threading.Event()
         self.client = None
+        self.mq_config = None
         self.message_listeners = set()
 
     def _get_mqtt_config(self) -> TuyaMQConfig:
@@ -71,7 +72,7 @@ class TuyaOpenMQ(threading.Thread):
                 "link_type": "mqtt",
                 "topics": "device",
                 "msg_encrypted_version": "2.0"
-                if (self.api.project_type == ProjectType.INDUSTY_SOLUTIONS)
+                if (self.api.project_type == DevelopMethod.CUSTOM)
                 else "1.0",
             },
         )
@@ -86,7 +87,7 @@ class TuyaOpenMQ(threading.Thread):
     ) -> Dict[str, Any]:
         key = password[8:24]
 
-        if self.api.project_type == ProjectType.SMART_HOME:
+        if self.api.project_type == DevelopMethod.SMART_HOME:
             cipher = AES.new(key.encode("utf8"), AES.MODE_ECB)
             msg = cipher.decrypt(base64.b64decode(b64msg))
             padding_bytes = msg[-1]
@@ -122,7 +123,7 @@ class TuyaOpenMQ(threading.Thread):
         else:
             logger.debug("disconnect")
 
-    def _on_connect(self, mqttc: mqtt.Client, userData: Any, flags, rc):
+    def _on_connect(self, mqttc: mqtt.Client, user_data: Any, flags, rc):
         logger.debug(f"connect flags->{flags}, rc->{rc}")
         if rc == 0:
             for (key, value) in self.mq_config.source_topic.items():
@@ -131,37 +132,37 @@ class TuyaOpenMQ(threading.Thread):
             self.__run_mqtt()
 
     def _on_message(
-        self, mqttc: mqtt.Client, userData: Any, msg: mqtt.MQTTMessage
+        self, mqttc: mqtt.Client, user_data: Any, msg: mqtt.MQTTMessage
     ):
         logger.debug(f"payload-> {msg.payload}")
 
-        msgDict = json.loads(msg.payload.decode("utf8"))
+        msg_dict = json.loads(msg.payload.decode("utf8"))
 
         # topic = msg.topic
-        # protocol = msgDict.get("protocol", 0)
-        # pv = msgDict.get("pv", "")
-        # data = msgDict.get("data", "")
+        # protocol = msg_dict.get("protocol", 0)
+        # pv = msg_dict.get("pv", "")
+        # data = msg_dict.get("data", "")
 
-        t = msgDict.get("t", "")
+        t = msg_dict.get("t", "")
 
-        mq_config = userData["mqConfig"]
-        decryptedData = self._decode_mq_message(
-            msgDict["data"], mq_config.password, t)
-        if decryptedData is None:
+        mq_config = user_data["mqConfig"]
+        decrypted_data = self._decode_mq_message(
+            msg_dict["data"], mq_config.password, t)
+        if decrypted_data is None:
             return
 
-        msgDict["data"] = decryptedData
-        logger.debug(f"on_message: {msgDict}")
+        msg_dict["data"] = decrypted_data
+        logger.debug(f"on_message: {msg_dict}")
 
         for listener in self.message_listeners:
-            listener(msgDict)
+            listener(msg_dict)
 
     def _on_subscribe(
-        self, mqttc: mqtt.Client, userData: Any, mid, granted_qos
+        self, mqttc: mqtt.Client, user_data: Any, mid, granted_qos
     ):
         logger.debug(f"_on_subscribe: {mid}")
 
-    def _on_log(self, mqttc: mqtt.Client, userData: Any, level, string):
+    def _on_log(self, mqttc: mqtt.Client, user_data: Any, level, string):
         logger.debug(f"_on_log: {string}")
 
     def run(self):
@@ -170,7 +171,7 @@ class TuyaOpenMQ(threading.Thread):
             self.__run_mqtt()
 
             # reconnect every 2 hours required.
-            time.sleep(self.mq_config.expireTime - 60)
+            time.sleep(self.mq_config.expire_time - 60)
 
     def __run_mqtt(self):
         mq_config = self._get_mqtt_config()

@@ -2,13 +2,14 @@
 # -*- coding: UTF-8 -*-
 """Tuya home's api base on asset and device api."""
 
-from .openapi import TuyaOpenAPI
-from .openmq import TuyaOpenMQ
-from .project_type import ProjectType
-from .asset import TuyaAssetManager
-from .device import TuyaDeviceManager
 from typing import Any, Dict
 from types import SimpleNamespace
+
+from .openapi import TuyaOpenAPI
+from .openmq import TuyaOpenMQ
+from .tuya_enums import DevelopMethod
+from .asset import TuyaAssetManager
+from .device import TuyaDeviceManager
 
 
 class TuyaScene(SimpleNamespace):
@@ -43,7 +44,7 @@ class TuyaHomeManager:
     def update_device_cache(self):
         """Update home's devices cache."""
         self.device_manager.device_map.clear()
-        if self.api.project_type == ProjectType.INDUSTY_SOLUTIONS:
+        if self.api.project_type == DevelopMethod.CUSTOM:
             device_ids = []
             asset_manager = TuyaAssetManager(self.api)
 
@@ -55,7 +56,7 @@ class TuyaHomeManager:
             #     device_ids += asset_manager.get_device_list(asset_id)
             if len(device_ids) > 0:
                 self.device_manager.update_device_caches(device_ids)
-        elif self.api.project_type == ProjectType.SMART_HOME:
+        elif self.api.project_type == DevelopMethod.SMART_HOME:
             self.device_manager.update_device_list_in_smart_home()
 
     def __query_device_ids(
@@ -64,7 +65,7 @@ class TuyaHomeManager:
             asset_id: str,
             device_ids: list) -> list:
         print(f"query_devices{asset_id}")
-        if (asset_id is not "-1"):
+        if asset_id != "-1":
             device_ids += asset_manager.get_device_list(asset_id)
         assets = asset_manager.get_asset_list(asset_id)
         for asset in assets:
@@ -76,7 +77,7 @@ class TuyaHomeManager:
 
     def query_scenes(self) -> list:
         """Query home scenes, only in SMART_HOME project type."""
-        if self.api.project_type == ProjectType.INDUSTY_SOLUTIONS:
+        if self.api.project_type == DevelopMethod.CUSTOM:
             return []
 
         response = self.api.get(f"/v1.0/users/{self.api.token_info.uid}/homes")
@@ -101,7 +102,7 @@ class TuyaHomeManager:
                       home_id: str,
                       scene_id: str) -> Dict[str, Any]:
         """Trigger home scene"""
-        if self.api.project_type == ProjectType.SMART_HOME:
+        if self.api.project_type == DevelopMethod.SMART_HOME:
             return self.api.post(f"/v1.0/homes/{home_id}/scenes/{scene_id}/trigger")
 
         return dict()
