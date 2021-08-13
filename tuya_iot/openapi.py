@@ -76,9 +76,9 @@ class TuyaOpenAPI:
         self.access_secret = access_secret
         self.lang = lang
 
-        self.__auth_type = auth_type
-        self.__develop_method = develop_method
-        if self.__develop_method == DevelopMethod.CUSTOM:
+        self.auth_type = auth_type
+        self.develop_method = develop_method
+        if self.develop_method == DevelopMethod.CUSTOM:
             self.__login_path = TO_C_CUSTOM_TOKEN_API
         else:
             self.__login_path = TO_C_SMART_HOME_TOKEN_API
@@ -165,7 +165,7 @@ class TuyaOpenAPI:
             return
 
         self.token_info.access_token = ""
-        if self.__auth_type == AuthType.TO_C:
+        if self.auth_type == AuthType.TO_C:
             response = self.post(
                 TO_C_REFRESH_TOKEN_API.format(self.token_info.refresh_token)
             )
@@ -203,12 +203,12 @@ class TuyaOpenAPI:
         self.__country_code = country_code
         self.__schema = schema
 
-        if self.__auth_type == AuthType.TO_B:
+        if self.auth_type == AuthType.TO_B:
             # TO B connect.
             response = self.get(TO_B_TOKEN_API, {"grant_type": 1})
         else:
             # To C connect.
-            if self.__develop_method == DevelopMethod.CUSTOM:
+            if self.develop_method == DevelopMethod.CUSTOM:
                 response = self.post(
                     TO_C_CUSTOM_TOKEN_API,
                     {
@@ -219,7 +219,7 @@ class TuyaOpenAPI:
                     },
                 )
             else:
-                self.post(
+                response = self.post(
                     TO_C_SMART_HOME_TOKEN_API,
                     {
                         "username": username,

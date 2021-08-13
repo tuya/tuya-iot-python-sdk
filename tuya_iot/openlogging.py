@@ -31,13 +31,13 @@ def filter_logger(result_info: Dict[str, Any]):
         filter_info = filter_info_original["result"]
     else:
         filter_info = filter_info_original
-    if filter_info is list:
+    if isinstance(filter_info, list):
         for item in filter_info:
             for filter_key in FILTER_LIST:
                 if filter_key in item:
                     item[filter_key] = STAR
 
-    elif filter_info is dict:
+    elif isinstance(filter_info, dict):
         for filter_key in FILTER_LIST:
             if filter_key in filter_info:
                 filter_info[filter_key] = STAR

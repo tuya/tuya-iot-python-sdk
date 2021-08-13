@@ -72,7 +72,7 @@ class TuyaOpenMQ(threading.Thread):
                 "link_type": "mqtt",
                 "topics": "device",
                 "msg_encrypted_version": "2.0"
-                if (self.api.project_type == DevelopMethod.CUSTOM)
+                if (self.api.develop_method == DevelopMethod.CUSTOM)
                 else "1.0",
             },
         )
@@ -87,7 +87,7 @@ class TuyaOpenMQ(threading.Thread):
     ) -> Dict[str, Any]:
         key = password[8:24]
 
-        if self.api.project_type == DevelopMethod.SMART_HOME:
+        if self.api.develop_method == DevelopMethod.SMART_HOME:
             cipher = AES.new(key.encode("utf8"), AES.MODE_ECB)
             msg = cipher.decrypt(base64.b64decode(b64msg))
             padding_bytes = msg[-1]

@@ -19,6 +19,7 @@ import websocket
 from Crypto.Cipher import AES
 
 from .openlogging import logger
+from .tuya_enums import TuyaCloudPulsarTopic
 
 # basic config
 WEB_SOCKET_QUERY_PARAMS = "?ackTimeoutMillis=3000&subscriptionType=Failover"
@@ -38,7 +39,8 @@ class TuyaOpenPulsar(threading.Thread):
     def __init__(self,
                  access_id: str,
                  access_secret: str,
-                 ws_endpoint: str):
+                 ws_endpoint: str,
+                 topic: str):
         """Init TuyaOpenPulsar."""
         threading.Thread.__init__(self)
         self._stop_event = threading.Event()
@@ -47,6 +49,7 @@ class TuyaOpenPulsar(threading.Thread):
         self.__access_id = access_id
         self.__access_secret = access_secret
         self.__ws_endpoint = ws_endpoint
+        self.__topic = topic
 
         self.message_listeners = set()
 
@@ -82,7 +85,7 @@ class TuyaOpenPulsar(threading.Thread):
     def __get_topic_url(self):
         return self.__ws_endpoint + "ws/v2/consumer/persistent/"\
             + self.__access_id + "/out/"\
-            + "event/"\
+            + self.__topic + "/"\
             + self.__access_id + "-sub"\
             + WEB_SOCKET_QUERY_PARAMS
 
