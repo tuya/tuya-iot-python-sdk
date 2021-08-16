@@ -42,5 +42,5 @@ class TuyaCloudPulsarWSEndpoint:
 class TuyaCloudPulsarTopic:
     """Tuya Cloud Pulsar Topic."""
 
-    RELEASE = "event"
+    PROD = "event"
     TEST = "event-test"
