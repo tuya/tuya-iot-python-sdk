@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tuya asset api."""
 
-from typing import Any, Dict, List
+from typing import Any
 
 from .openapi import TuyaOpenAPI
 
@@ -23,7 +23,7 @@ class TuyaAssetManager:
     # Asset Management
     # https://developer.tuya.com/docs/cloud/industrial-general-asset-management/4872453fec?id=Kag2yom602i40
 
-    def get_device_list(self, asset_id: str) -> List[str]:
+    def get_device_list(self, asset_id: str) -> list[str]:
         """Get devices by asset_id.
 
         Args:
@@ -54,7 +54,7 @@ class TuyaAssetManager:
 
         return device_id_list
 
-    def get_asset_info(self, asset_id: str) -> Dict[str, Any]:
+    def get_asset_info(self, asset_id: str) -> dict[str, Any]:
         """Get asset's info.
 
         Args:

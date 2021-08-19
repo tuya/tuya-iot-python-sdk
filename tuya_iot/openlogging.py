@@ -3,7 +3,7 @@
 """Tuya iot logging."""
 
 import logging
-from typing import Any, Dict
+from typing import Any
 import copy
 
 logger = logging.getLogger('tuya iot')
@@ -22,7 +22,7 @@ FILTER_LIST = ["access_token", "client_id", "ip", "lat", "link_id",
 STAR = "***"
 
 
-def filter_logger(result_info: Dict[str, Any]):
+def filter_logger(result_info: dict[str, Any]):
     """Filter log, hide sensitive info."""
     if result_info is None:
         return result_info

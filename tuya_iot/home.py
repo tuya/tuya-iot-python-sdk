@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 """Tuya home's api base on asset and device api."""
 
-from typing import Any, Dict
+from typing import Any
 from types import SimpleNamespace
 
 from .openapi import TuyaOpenAPI
@@ -100,7 +100,7 @@ class TuyaHomeManager:
 
     def trigger_scene(self,
                       home_id: str,
-                      scene_id: str) -> Dict[str, Any]:
+                      scene_id: str) -> dict[str, Any]:
         """Trigger home scene"""
         if self.api.develop_method == DevelopMethod.SMART_HOME:
             return self.api.post(f"/v1.0/homes/{home_id}/scenes/{scene_id}/trigger")

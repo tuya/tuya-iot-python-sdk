@@ -7,7 +7,7 @@ import json
 import time
 import threading
 import uuid
-from typing import Any, Callable, Dict
+from typing import Any, Callable
 from urllib.parse import urlsplit
 from paho.mqtt import client as mqtt
 from Crypto.Cipher import AES
@@ -32,7 +32,7 @@ class TuyaMQConfig:
     sink_topic = {}
     expire_time = 0
 
-    def __init__(self, mqConfigResponse: Dict[str, Any] = {}):
+    def __init__(self, mqConfigResponse: dict[str, Any] = {}):
         """Init TuyaMQConfig."""
         result = mqConfigResponse.get("result", {})
 
@@ -84,7 +84,7 @@ class TuyaOpenMQ(threading.Thread):
 
     def _decode_mq_message(
         self, b64msg: str, password: str, t: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         key = password[8:24]
 
         if self.api.develop_method == DevelopMethod.SMART_HOME:
