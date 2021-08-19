@@ -13,7 +13,7 @@ from paho.mqtt import client as mqtt
 from Crypto.Cipher import AES
 
 from .openapi import TuyaOpenAPI
-from .tuya_enums import DevelopMethod
+from .tuya_enums import AuthType
 from .openlogging import logger
 
 LINK_ID = "tuya-iot-app-sdk-python.{}".format(uuid.uuid1())
@@ -72,7 +72,7 @@ class TuyaOpenMQ(threading.Thread):
                 "link_type": "mqtt",
                 "topics": "device",
                 "msg_encrypted_version": "2.0"
-                if (self.api.develop_method == DevelopMethod.CUSTOM)
+                if (self.api.auth_type == AuthType.CUSTOM)
                 else "1.0",
             },
         )
@@ -87,7 +87,7 @@ class TuyaOpenMQ(threading.Thread):
     ) -> Dict[str, Any]:
         key = password[8:24]
 
-        if self.api.develop_method == DevelopMethod.SMART_HOME:
+        if self.api.auth_type == AuthType.SMART_HOME:
             cipher = AES.new(key.encode("utf8"), AES.MODE_ECB)
             msg = cipher.decrypt(base64.b64decode(b64msg))
             padding_bytes = msg[-1]
