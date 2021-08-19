@@ -15,7 +15,7 @@ class TuyaAssetManager:
 
     """
 
-    def __init__(self, api: TuyaOpenAPI):
+    def __init__(self, api: TuyaOpenAPI) -> None:
         """Init Tuya asset manager."""
         self.api = api
 

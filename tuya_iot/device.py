@@ -149,7 +149,7 @@ class TuyaDeviceManager:
 
     """
 
-    def __init__(self, api: TuyaOpenAPI, mq: TuyaOpenMQ):
+    def __init__(self, api: TuyaOpenAPI, mq: TuyaOpenMQ) -> None:
         """Tuya device manager init."""
         self.api = api
         self.mq = mq

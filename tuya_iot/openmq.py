@@ -32,7 +32,7 @@ class TuyaMQConfig:
     sink_topic = {}
     expire_time = 0
 
-    def __init__(self, mqConfigResponse: dict[str, Any] = {}):
+    def __init__(self, mqConfigResponse: dict[str, Any] = {}) -> None:
         """Init TuyaMQConfig."""
         result = mqConfigResponse.get("result", {})
 
@@ -54,7 +54,7 @@ class TuyaOpenMQ(threading.Thread):
       openapi: tuya openapi
     """
 
-    def __init__(self, api: TuyaOpenAPI):
+    def __init__(self, api: TuyaOpenAPI) -> None:
         """Init TuyaOpenMQ."""
         threading.Thread.__init__(self)
         self.api: TuyaOpenAPI = api

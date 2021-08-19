@@ -67,7 +67,7 @@ class TuyaOpenAPI:
         develop_method: DevelopMethod = DevelopMethod.SMART_HOME,
         auth_type: AuthType = AuthType.TO_C,
         lang: str = "en",
-    ):
+    ) -> None:
         """Init TuyaOpenAPI."""
         self.session = requests.session()
 

@@ -35,7 +35,7 @@ class TuyaHomeManager:
         self, api: TuyaOpenAPI,
         mq: TuyaOpenMQ,
         device_manager: TuyaDeviceManager
-    ):
+    ) -> None:
         """Init tuya home manager."""
         self.api = api
         self.mq = mq
@@ -105,4 +105,4 @@ class TuyaHomeManager:
         if self.api.develop_method == DevelopMethod.SMART_HOME:
             return self.api.post(f"/v1.0/homes/{home_id}/scenes/{scene_id}/trigger")
 
-        return dict()
+        return {}

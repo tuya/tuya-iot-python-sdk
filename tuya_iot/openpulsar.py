@@ -40,7 +40,7 @@ class TuyaOpenPulsar(threading.Thread):
                  access_id: str,
                  access_secret: str,
                  ws_endpoint: str,
-                 topic: str):
+                 topic: str) -> None:
         """Init TuyaOpenPulsar."""
         threading.Thread.__init__(self)
         self._stop_event = threading.Event()
