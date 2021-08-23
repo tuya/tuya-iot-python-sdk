@@ -76,6 +76,8 @@ With diversified devices and industries, Tuya Cloud Development Platform opens b
 
 - [HomeAssistant Tuya Plugin](https://github.com/tuya/tuya-home-assistant)
 
+- [FHEM Tuya Plugin by fhempy](https://github.com/dominikkarall/fhempy/tree/master/FHEM/bindings/python/fhempy/lib/tuya_cloud)
+
 - ...
 
 
