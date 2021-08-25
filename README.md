@@ -9,10 +9,8 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tuya-iot-py-sdk)
 
 
-
 A Python sdk for Tuya Open API, which provides basic IoT capabilities like device management, asset management and industry capabilities, helping you create IoT solutions. 
 With diversified devices and industries, Tuya Cloud Development Platform opens basic IoT capabilities like device management, AI scenarios, and data analytics services, as well as industry capabilities, helping you create IoT solutions.
-
 
 
 ## Features
@@ -75,6 +73,8 @@ With diversified devices and industries, Tuya Cloud Development Platform opens b
 
 
 - [HomeAssistant Tuya Plugin](https://github.com/tuya/tuya-home-assistant)
+
+- [Tuya Connector Python](https://github.com/tuya/tuya-connector-python)
 
 - [FHEM Tuya Plugin by fhempy](https://github.com/dominikkarall/fhempy/tree/master/FHEM/bindings/python/fhempy/lib/tuya_cloud)
 
