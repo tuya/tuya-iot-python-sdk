@@ -6,6 +6,7 @@ from .asset import TuyaAssetManager
 from .device import TuyaDeviceManager, TuyaDevice, TuyaDeviceListener
 from .tuya_enums import AuthType, TuyaCloudOpenAPIEndpoint
 from .home import TuyaHomeManager, TuyaScene
+from .infrared import TuyaRemote
 from .openlogging import TUYA_LOGGER
 from .version import VERSION
 
