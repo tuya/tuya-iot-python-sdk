@@ -10,6 +10,7 @@ from .openmq import TuyaOpenMQ
 from .tuya_enums import AuthType
 from .asset import TuyaAssetManager
 from .device import TuyaDeviceManager
+from .infrared import TuyaRemote, TuyaRemoteDevice, TuyaRemoteDeviceKey
 
 
 class TuyaScene(SimpleNamespace):
@@ -106,3 +107,54 @@ class TuyaHomeManager:
             return self.api.post(f"/v1.0/homes/{home_id}/scenes/{scene_id}/trigger")
 
         return dict()
+
+    def query_infrared_devices(self) -> list:
+        """Query infrared devices, only in SMART_HOME project type."""
+        if self.api.auth_type == AuthType.CUSTOM:
+            return []
+
+        remote_ids = []
+        for (device_id, device) in self.device_manager.device_map.items():
+            if device.category == "qt":
+                remote_ids.append(device_id)
+
+        remotes = []
+        for remote_id in remote_ids:
+            remotes_response = self.api.get(f"/v1.0/infrareds/{remote_id}/remotes")
+            if not remotes_response.get("success", False):
+                continue
+
+            remote_device_response = remotes_response.get("result")
+
+            remote_devices = []
+            for remote_device in remote_device_response:
+                # Air conditioners not implemented yet ( but it will be in the future )
+                if remote_device["category_id"] == "5":
+                    continue
+
+                keys_response = self.api.get(f"/v1.0/infrareds/{remote_id}/remotes/{remote_device['remote_id']}/keys")
+
+                if not keys_response.get("success", False):
+                    continue
+
+                keys_result = keys_response.get("result")
+                key_values = keys_result.get("key_list")
+
+                tuya_remote_device_keys = []
+                for tuya_key in key_values:
+                    tuya_remote_device_keys.append(TuyaRemoteDeviceKey(tuya_key["key"], tuya_key["key_id"],
+                                                                       tuya_key["key_name"], tuya_key["standard_key"]))
+
+                remote_devices.append(TuyaRemoteDevice(remote_device, tuya_remote_device_keys))
+
+            if remote_devices:
+                remotes.append(TuyaRemote(remote_id, remote_devices))
+
+        return remotes
+
+    def trigger_infrared_commands(self, remote_id, device_id, key) -> None:
+        """Send infrared commands, only in SMART_HOME project type."""
+        if self.api.auth_type == AuthType.CUSTOM:
+            return []
+
+        self.api.post("/v1.0/infrareds/{}/remotes/{}/command".format(remote_id, device_id), {"key": key})
