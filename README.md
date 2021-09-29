@@ -25,7 +25,7 @@ With diversified devices and industries, Tuya Cloud Development Platform opens b
 	- put
 	- delete
  	
-- TuyaOpenQ
+- TuyaOpenMQ
 	- start
 	- stop
 	- add_message_listener
@@ -62,12 +62,15 @@ With diversified devices and industries, Tuya Cloud Development Platform opens b
 	- update_device_cache
 	- query_scenes
 	- trigger_scene
+	- query_infrared_devices
+	- trigger_infrared_commands
 	
 #### Assets
 - TuyaAssetManager
 	- get_device_list
 	- get_asset_info
 	- get_asset_list
+
 
 
 ## Possible scenarios
