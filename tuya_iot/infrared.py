@@ -7,7 +7,9 @@ class TuyaRemoteDeviceKey(SimpleNamespace):
     key_name: str
     standard_key: bool
 
-    def __init__(self, key: str, key_id: int, key_name: str, standard_key: bool) -> None:
+    def __init__(
+        self, key: str, key_id: int, key_name: str, standard_key: bool
+    ) -> None:
         self.key = key
         self.key_id = key_id
         self.key_name = key_name
@@ -41,6 +43,3 @@ class TuyaRemote(SimpleNamespace):
     def __init__(self, remote_id: str, remote_devices: list) -> None:
         self.remote_id = remote_id
         self.remote_devices = remote_devices
-
-
-
