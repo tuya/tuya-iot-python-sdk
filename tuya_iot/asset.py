@@ -84,7 +84,9 @@ class TuyaAssetManager:
                 {
                     # "parent_asset_id": parent_asset_id,
                     "asset_id": parent_asset_id,
-                    "last_row_key": last_row_key, "page_size": 100},
+                    "last_row_key": last_row_key,
+                    "page_size": 100,
+                },
             )
             result = response.get("result", {})
             has_next = result.get("has_next", False)
