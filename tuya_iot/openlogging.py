@@ -2,22 +2,32 @@
 # -*- coding: UTF-8 -*-
 """Tuya iot logging."""
 
+import copy
 import logging
 from typing import Any
-import copy
 
-logger = logging.getLogger('tuya iot')
+logger = logging.getLogger("tuya iot")
 
 default_handler = logging.StreamHandler()
-default_handler.setFormatter(logging.Formatter(
-    "[%(asctime)s] [tuya-%(module)s] %(message)s"
-))
+default_handler.setFormatter(
+    logging.Formatter("[%(asctime)s] [tuya-%(module)s] %(message)s")
+)
 
 logger.addHandler(default_handler)
 TUYA_LOGGER = logger
 
-FILTER_LIST = ["access_token", "client_id", "ip", "lat", "link_id",
-               "local_key", "lon", "password", "refresh_token", "uid"]
+FILTER_LIST = [
+    "access_token",
+    "client_id",
+    "ip",
+    "lat",
+    "link_id",
+    "local_key",
+    "lon",
+    "password",
+    "refresh_token",
+    "uid",
+]
 
 STAR = "***"
 
