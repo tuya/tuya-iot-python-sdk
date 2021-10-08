@@ -2,15 +2,15 @@
 # -*- coding: UTF-8 -*-
 """Tuya device api."""
 
-import abc
 import time
+from abc import ABCMeta, abstractclassmethod
 from types import SimpleNamespace
 from typing import Any
 
 from .openapi import TuyaOpenAPI
+from .openlogging import logger
 from .openmq import TuyaOpenMQ
 from .tuya_enums import AuthType
-from .openlogging import logger
 
 PROTOCOL_DEVICE_REPORT = 4
 PROTOCOL_OTHER = 20
@@ -110,10 +110,10 @@ class TuyaDevice(SimpleNamespace):
         return self.id == other.id
 
 
-class TuyaDeviceListener(metaclass=abc.ABCMeta):
+class TuyaDeviceListener(metaclass=ABCMeta):
     """Tuya device listener."""
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def update_device(self, device: TuyaDevice):
         """Update device info.
 
@@ -122,7 +122,7 @@ class TuyaDeviceListener(metaclass=abc.ABCMeta):
         """
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def add_device(self, device: TuyaDevice):
         """Device Added.
 
@@ -131,7 +131,7 @@ class TuyaDeviceListener(metaclass=abc.ABCMeta):
         """
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def remove_device(self, device_id: str):
         """Device removed.
 
@@ -153,7 +153,7 @@ class TuyaDeviceManager:
         """Tuya device manager init."""
         self.api = api
         self.mq = mq
-        if (api.auth_type == AuthType.SMART_HOME):
+        if api.auth_type == AuthType.SMART_HOME:
             self.device_manage = SmartHomeDeviceManage(api)
         else:
             self.device_manage = IndustrySolutionDeviceManage(api)
@@ -479,9 +479,7 @@ class TuyaDeviceManager:
         """
         return self.device_manage.get_device_specification(device_id)
 
-    def send_commands(self,
-                      device_id: str,
-                      commands: list[str]) -> dict[str, Any]:
+    def send_commands(self, device_id: str, commands: list[str]) -> dict[str, Any]:
         """Send commands.
 
         Send command to the device.For example:
@@ -505,55 +503,55 @@ class DeviceManage(metaclass=abc.ABCMeta):
     def __init__(self, api: TuyaOpenAPI):
         self.api = api
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def update_device_caches(self, devIds: list[str]):
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def get_device_info(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def get_device_list_info(self, devIds: list[str]) -> dict[str, Any]:
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def get_device_status(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def get_device_list_status(self, devIds: list[str]) -> dict[str, Any]:
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def get_factory_info(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def factory_reset(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def remove_device(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def remove_device_list(self, devIds: list[str]) -> dict[str, Any]:
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def get_device_functions(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def get_category_functions(self, categoryId: str) -> dict[str, Any]:
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def get_device_specification(self, device_id: str) -> dict[str, str]:
         pass
 
-    @abc.abstractclassmethod
+    @abstractclassmethod
     def send_commands(self, device_id: str, commands: list[str]) -> dict[str, Any]:
         pass
 
@@ -568,8 +566,7 @@ class SmartHomeDeviceManage(DeviceManage):
         return response
 
     def get_device_list_info(self, devIds: list[str]) -> dict[str, Any]:
-        response = self.api.get(
-            "/v1.0/devices/", {"device_ids": ",".join(devIds)})
+        response = self.api.get("/v1.0/devices/", {"device_ids": ",".join(devIds)})
         if response["success"]:
             for info in response["result"]["devices"]:
                 info.pop("status")
@@ -582,13 +579,11 @@ class SmartHomeDeviceManage(DeviceManage):
         return response
 
     def get_device_list_status(self, devIds: list[str]) -> dict[str, Any]:
-        response = self.api.get(
-            "/v1.0/devices/", {"device_ids": ",".join(devIds)})
+        response = self.api.get("/v1.0/devices/", {"device_ids": ",".join(devIds)})
         status_list = []
         if response["success"]:
             for info in response["result"]["devices"]:
-                status_list.append(
-                    {"id": info["id"], "status": info["status"]})
+                status_list.append({"id": info["id"], "status": info["status"]})
 
         response["result"] = status_list
         return response
@@ -619,8 +614,7 @@ class SmartHomeDeviceManage(DeviceManage):
 
     def send_commands(self, device_id: str, commands: list[str]) -> dict[str, Any]:
         return self.api.post(
-            "/v1.0/devices/{}/commands".format(
-                device_id), {"commands": commands}
+            "/v1.0/devices/{}/commands".format(device_id), {"commands": commands}
         )
 
 
@@ -668,6 +662,5 @@ class IndustrySolutionDeviceManage(DeviceManage):
 
     def send_commands(self, device_id: str, commands: list[str]) -> dict[str, Any]:
         return self.api.post(
-            "/v1.0/iot-03/devices/{}/commands".format(
-                device_id), {"commands": commands}
+            "/v1.0/iot-03/devices/{}/commands".format(device_id), {"commands": commands}
         )
