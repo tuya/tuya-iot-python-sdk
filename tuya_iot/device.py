@@ -9,7 +9,7 @@ from typing import Any
 
 from .openapi import TuyaOpenAPI
 from .openmq import TuyaOpenMQ
-from .tuya_enums import DevelopMethod
+from .tuya_enums import AuthType
 from .openlogging import logger
 
 PROTOCOL_DEVICE_REPORT = 4
@@ -153,11 +153,10 @@ class TuyaDeviceManager:
         """Tuya device manager init."""
         self.api = api
         self.mq = mq
-        self.device_manage = (
-            SmartHomeDeviceManage(api)
-            if (api.develop_method == DevelopMethod.SMART_HOME)
-            else IndustrySolutionDeviceManage(api)
-        )
+        if (api.auth_type == AuthType.SMART_HOME):
+            self.device_manage = SmartHomeDeviceManage(api)
+        else:
+            self.device_manage = IndustrySolutionDeviceManage(api)
 
         mq.add_message_listener(self.on_message)
         self.device_map: dict[str, TuyaDevice] = {}

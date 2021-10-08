@@ -6,7 +6,7 @@ import logging
 from env import ENDPOINT, ACCESS_ID, ACCESS_KEY, USERNAME, PASSWORD
 from tuya_iot import (
     TuyaOpenAPI,
-    DevelopMethod,
+    AuthType,
     TuyaOpenMQ,
     TuyaDeviceManager,
     TuyaHomeManager,
@@ -18,7 +18,7 @@ from tuya_iot import (
 
 tuya_logger.setLevel(logging.DEBUG)
 # Init
-openapi = TuyaOpenAPI(ENDPOINT, ACCESS_ID, ACCESS_KEY, DevelopMethod.CUSTOM)
+openapi = TuyaOpenAPI(ENDPOINT, ACCESS_ID, ACCESS_KEY, AuthType.CUSTOM)
 
 openapi.connect(USERNAME, PASSWORD)
 openmq = TuyaOpenMQ(openapi)

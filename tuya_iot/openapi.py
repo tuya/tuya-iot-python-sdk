@@ -13,15 +13,13 @@ from typing import Any, Optional
 import requests
 
 from .openlogging import filter_logger, logger
-from .tuya_enums import AuthType, DevelopMethod
+from .tuya_enums import AuthType
 from .version import VERSION
 
 TUYA_ERROR_CODE_TOKEN_INVALID = 1010
 
-TO_B_REFRESH_TOKEN_API = "/v1.0/token/{}"
 TO_C_REFRESH_TOKEN_API = "/v1.0/iot-03/users/token/{}"
 
-TO_B_TOKEN_API = "/v1.0/token"
 TO_C_CUSTOM_TOKEN_API = "/v1.0/iot-03/users/login"
 TO_C_SMART_HOME_TOKEN_API = "/v1.0/iot-01/associated-users/actions/authorized-login"
 
@@ -64,8 +62,7 @@ class TuyaOpenAPI:
         endpoint: str,
         access_id: str,
         access_secret: str,
-        develop_method: DevelopMethod = DevelopMethod.SMART_HOME,
-        auth_type: AuthType = AuthType.TO_C,
+        auth_type: AuthType = AuthType.SMART_HOME,
         lang: str = "en",
     ) -> None:
         """Init TuyaOpenAPI."""
@@ -77,8 +74,7 @@ class TuyaOpenAPI:
         self.lang = lang
 
         self.auth_type = auth_type
-        self.develop_method = develop_method
-        if self.develop_method == DevelopMethod.CUSTOM:
+        if self.auth_type == AuthType.CUSTOM:
             self.__login_path = TO_C_CUSTOM_TOKEN_API
         else:
             self.__login_path = TO_C_SMART_HOME_TOKEN_API
@@ -165,14 +161,9 @@ class TuyaOpenAPI:
             return
 
         self.token_info.access_token = ""
-        if self.auth_type == AuthType.TO_C:
-            response = self.post(
-                TO_C_REFRESH_TOKEN_API.format(self.token_info.refresh_token)
-            )
-        else:
-            response = self.post(
-                TO_B_REFRESH_TOKEN_API.format(self.token_info.refresh_token)
-            )
+        response = self.post(
+            TO_C_REFRESH_TOKEN_API.format(self.token_info.refresh_token)
+        )
 
         self.token_info = TuyaTokenInfo(response)
 
@@ -203,31 +194,26 @@ class TuyaOpenAPI:
         self.__country_code = country_code
         self.__schema = schema
 
-        if self.auth_type == AuthType.TO_B:
-            # TO B connect.
-            response = self.get(TO_B_TOKEN_API, {"grant_type": 1})
+        if self.auth_type == AuthType.CUSTOM:
+            response = self.post(
+                TO_C_CUSTOM_TOKEN_API,
+                {
+                    "username": username,
+                    "password": hashlib.sha256(password.encode("utf8"))
+                    .hexdigest()
+                    .lower(),
+                },
+            )
         else:
-            # To C connect.
-            if self.develop_method == DevelopMethod.CUSTOM:
-                response = self.post(
-                    TO_C_CUSTOM_TOKEN_API,
-                    {
-                        "username": username,
-                        "password": hashlib.sha256(password.encode("utf8"))
-                        .hexdigest()
-                        .lower(),
-                    },
-                )
-            else:
-                response = self.post(
-                    TO_C_SMART_HOME_TOKEN_API,
-                    {
-                        "username": username,
-                        "password": hashlib.md5(password.encode("utf8")).hexdigest(),
-                        "country_code": country_code,
-                        "schema": schema,
-                    },
-                )
+            response = self.post(
+                TO_C_SMART_HOME_TOKEN_API,
+                {
+                    "username": username,
+                    "password": hashlib.md5(password.encode("utf8")).hexdigest(),
+                    "country_code": country_code,
+                    "schema": schema,
+                },
+            )
 
         if not response["success"]:
             return response

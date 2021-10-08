@@ -4,9 +4,9 @@ from .openapi import TuyaOpenAPI, TuyaTokenInfo
 from .openmq import TuyaOpenMQ
 from .asset import TuyaAssetManager
 from .device import TuyaDeviceManager, TuyaDevice, TuyaDeviceListener
-from .tuya_enums import DevelopMethod, AuthType, TuyaCloudOpenAPIEndpoint, TuyaCloudPulsarWSEndpoint, TuyaCloudPulsarTopic
+from .tuya_enums import AuthType, TuyaCloudOpenAPIEndpoint
 from .home import TuyaHomeManager, TuyaScene
-from .openpulsar import TuyaOpenPulsar
+from .infrared import TuyaRemote
 from .openlogging import TUYA_LOGGER
 from .version import VERSION
 
@@ -18,14 +18,10 @@ __all__ = [
     "TuyaDeviceManager",
     "TuyaDevice",
     "TuyaDeviceListener",
-    "DevelopMethod",
     "AuthType",
     "TuyaCloudOpenAPIEndpoint",
-    "TuyaCloudPulsarWSEndpoint",
-    "TuyaCloudPulsarTopic",
     "TuyaHomeManager",
     "TuyaScene",
-    "TuyaOpenPulsar",
     "TUYA_LOGGER"
 ]
 __version__ = VERSION
