@@ -7,7 +7,7 @@ class TuyaRemoteDeviceKey(SimpleNamespace):
     key_name: str
     standard_key: bool
 
-    def __init__(self, key: str, key_id: int, key_name: str, standard_key: bool):
+    def __init__(self, key: str, key_id: int, key_name: str, standard_key: bool) -> None:
         self.key = key
         self.key_id = key_id
         self.key_name = key_name
@@ -22,7 +22,7 @@ class TuyaRemoteDevice(SimpleNamespace):
     remote_id = str
     keys: list
 
-    def __init__(self, props: dict, keys: list):
+    def __init__(self, props: dict, keys: list) -> None:
         self.map(props)
         self.keys = keys
 
@@ -38,7 +38,7 @@ class TuyaRemote(SimpleNamespace):
     remote_id: str
     remote_devices = list
 
-    def __init__(self, remote_id: str, remote_devices: list):
+    def __init__(self, remote_id: str, remote_devices: list) -> None:
         self.remote_id = remote_id
         self.remote_devices = remote_devices
 
