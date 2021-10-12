@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
 """Tuya iot enums."""
 
 from enum import Enum

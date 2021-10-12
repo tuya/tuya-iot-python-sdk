@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
 """Tuya Open API."""
 
 from __future__ import annotations

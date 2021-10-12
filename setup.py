@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
-
-# from distutils.core import setup
 from setuptools import setup, find_packages
 from tuya_iot import __version__
 
