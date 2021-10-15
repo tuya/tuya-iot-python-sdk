@@ -1,16 +1,13 @@
 from setuptools import setup, find_packages
 from tuya_iot import __version__
 
-tests_require = []
-
 
 def requirements():
-    with open('requirements.txt', 'r') as fileobj:
-        requirements = [line.strip() for line in fileobj]
-        return requirements
+    with open('requirements.txt') as fileobj:
+        return [line.strip() for line in fileobj]
 
 
-with open("README.md", "r", encoding="utf-8") as fh:
+with open("README.md", encoding="utf-8") as fh:
     doc_long_description = fh.read()
 
 
@@ -38,16 +35,14 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: Implementation :: PyPy'
     ],
 
     version=__version__,
     install_requires=requirements(),
-    tests_require=tests_require,
     test_suite='runtests.runtests',
-    extras_require={'test': tests_require},
     entry_points={'nose.plugins': []},
     packages=find_packages(),
-    python_requires='>=3.0',
-
+    python_requires='>=3.6',
 )
