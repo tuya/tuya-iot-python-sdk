@@ -60,12 +60,10 @@ class TuyaHomeManager:
     def __query_device_ids(
         self, asset_manager: TuyaAssetManager, asset_id: str, device_ids: list
     ) -> list:
-        print(f"query_devices{asset_id}")
         if asset_id != "-1":
             device_ids += asset_manager.get_device_list(asset_id)
         assets = asset_manager.get_asset_list(asset_id)
         for asset in assets:
-            print(f"asset--->{asset}")
             self.__query_device_ids(asset_manager, asset["asset_id"], device_ids)
         return device_ids
 
