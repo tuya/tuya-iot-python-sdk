@@ -479,7 +479,7 @@ class TuyaDeviceManager:
 
     def send_commands(self,
                       device_id: str,
-                      commands: List[str]) -> Dict[str, Any]:
+                      commands: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Send commands.
 
         Send command to the device.For example:
@@ -615,7 +615,7 @@ class SmartHomeDeviceManage(DeviceManage):
     def get_device_specification(self, device_id: str) -> Dict[str, str]:
         return self.api.get("/v1.0/devices/{}/specifications".format(device_id))
 
-    def send_commands(self, device_id: str, commands: List[str]) -> Dict[str, Any]:
+    def send_commands(self, device_id: str, commands: List[Dict[str, Any]]) -> Dict[str, Any]:
         return self.api.post(
             "/v1.0/devices/{}/commands".format(
                 device_id), {"commands": commands}
@@ -664,7 +664,7 @@ class IndustrySolutionDeviceManage(DeviceManage):
     def get_device_specification(self, device_id: str) -> Dict[str, str]:
         return self.api.get("/v1.0/iot-03/devices/{}/specification".format(device_id))
 
-    def send_commands(self, device_id: str, commands: List[str]) -> Dict[str, Any]:
+    def send_commands(self, device_id: str, commands: List[Dict[str, Any]]) -> Dict[str, Any]:
         return self.api.post(
             "/v1.0/iot-03/devices/{}/commands".format(
                 device_id), {"commands": commands}
