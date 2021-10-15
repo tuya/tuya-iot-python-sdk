@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
 """Tuya home's api base on asset and device api."""
 
 from typing import Any, Dict

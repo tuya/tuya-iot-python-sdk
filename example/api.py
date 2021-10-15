@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
-
 import logging
 from tuya_iot import TuyaOpenAPI, tuya_logger
 
