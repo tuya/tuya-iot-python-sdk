@@ -1,7 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
-
-
 import logging
 from env import ENDPOINT, ACCESS_ID, ACCESS_KEY, USERNAME, PASSWORD
 from tuya_iot import (

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Tuya asset api."""
 
 from typing import Any

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
 """Tuya device api."""
 
 import time
@@ -103,7 +101,7 @@ class TuyaDevice(SimpleNamespace):
 
     status: dict[str, Any] = {}
     function: dict[str, TuyaDeviceFunction] = {}
-    status_range: dict[str, str] = {}
+    status_range: dict[str, TuyaDeviceStatusRange] = {}
 
     def __eq__(self, other):
         """If devices are the same one."""
@@ -479,7 +477,10 @@ class TuyaDeviceManager:
         """
         return self.device_manage.get_device_specification(device_id)
 
-    def send_commands(self, device_id: str, commands: list[str]) -> dict[str, Any]:
+    def send_commands(self,
+                      device_id: str,
+                      commands: list[Dict[str, Any]]) -> dict[str, Any]:
+
         """Send commands.
 
         Send command to the device.For example:
@@ -612,7 +613,8 @@ class SmartHomeDeviceManage(DeviceManage):
     def get_device_specification(self, device_id: str) -> dict[str, str]:
         return self.api.get("/v1.0/devices/{}/specifications".format(device_id))
 
-    def send_commands(self, device_id: str, commands: list[str]) -> dict[str, Any]:
+    def send_commands(self, device_id: str, commands: List[dict[str, Any]]) -> dict[str, Any]:
+
         return self.api.post(
             "/v1.0/devices/{}/commands".format(device_id), {"commands": commands}
         )
@@ -660,7 +662,8 @@ class IndustrySolutionDeviceManage(DeviceManage):
     def get_device_specification(self, device_id: str) -> dict[str, str]:
         return self.api.get("/v1.0/iot-03/devices/{}/specification".format(device_id))
 
-    def send_commands(self, device_id: str, commands: list[str]) -> dict[str, Any]:
+    def send_commands(self, device_id: str, commands: list[dict[str, Any]]) -> dict[str, Any]:
+
         return self.api.post(
             "/v1.0/iot-03/devices/{}/commands".format(device_id), {"commands": commands}
         )

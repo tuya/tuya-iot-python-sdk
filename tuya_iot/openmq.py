@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
 """Tuya Open IOT HUB which base on MQTT."""
 
 import base64
