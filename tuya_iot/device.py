@@ -101,7 +101,7 @@ class TuyaDevice(SimpleNamespace):
 
     status: Dict[str, Any] = {}
     function: Dict[str, TuyaDeviceFunction] = {}
-    status_range: Dict[str, str] = {}
+    status_range: Dict[str, TuyaDeviceStatusRange] = {}
 
     def __eq__(self, other):
         """If devices are the same one."""
