@@ -2,17 +2,18 @@
 
 import base64
 import json
-import time
 import threading
+import time
 import uuid
-from typing import Any, Callable, Dict
+from typing import Any, Callable
 from urllib.parse import urlsplit
-from paho.mqtt import client as mqtt
+
 from Crypto.Cipher import AES
+from paho.mqtt import client as mqtt
 
 from .openapi import TuyaOpenAPI
-from .tuya_enums import AuthType
 from .openlogging import logger
+from .tuya_enums import AuthType
 
 LINK_ID = "tuya-iot-app-sdk-python.{}".format(uuid.uuid1())
 GCM_TAG_LENGTH = 16
@@ -30,7 +31,7 @@ class TuyaMQConfig:
     sink_topic = {}
     expire_time = 0
 
-    def __init__(self, mqConfigResponse: Dict[str, Any] = {}):
+    def __init__(self, mqConfigResponse: dict[str, Any] = {}) -> None:
         """Init TuyaMQConfig."""
         result = mqConfigResponse.get("result", {})
 
@@ -52,7 +53,7 @@ class TuyaOpenMQ(threading.Thread):
       openapi: tuya openapi
     """
 
-    def __init__(self, api: TuyaOpenAPI):
+    def __init__(self, api: TuyaOpenAPI) -> None:
         """Init TuyaOpenMQ."""
         threading.Thread.__init__(self)
         self.api: TuyaOpenAPI = api
@@ -80,9 +81,7 @@ class TuyaOpenMQ(threading.Thread):
 
         return TuyaMQConfig(response)
 
-    def _decode_mq_message(
-        self, b64msg: str, password: str, t: str
-    ) -> Dict[str, Any]:
+    def _decode_mq_message(self, b64msg: str, password: str, t: str) -> dict[str, Any]:
         key = password[8:24]
 
         if self.api.auth_type == AuthType.SMART_HOME:
@@ -97,16 +96,16 @@ class TuyaOpenMQ(threading.Thread):
 
             # get iv buffer
             iv_length = int.from_bytes(buffer[0:4], byteorder="big")
-            iv_buffer = buffer[4: iv_length + 4]
+            iv_buffer = buffer[4 : iv_length + 4]
 
             # get data buffer
-            data_buffer = buffer[iv_length + 4: len(buffer) - GCM_TAG_LENGTH]
+            data_buffer = buffer[iv_length + 4 : len(buffer) - GCM_TAG_LENGTH]
 
             # aad
             aad_buffer = str(t).encode("utf8")
 
             # tag
-            tag_buffer = buffer[len(buffer) - GCM_TAG_LENGTH:]
+            tag_buffer = buffer[len(buffer) - GCM_TAG_LENGTH :]
 
             cipher = AES.new(key.encode("utf8"), AES.MODE_GCM, nonce=iv_buffer)
             cipher.update(aad_buffer)
@@ -129,9 +128,7 @@ class TuyaOpenMQ(threading.Thread):
         elif rc == CONNECT_FAILED_NOT_AUTHORISED:
             self.__run_mqtt()
 
-    def _on_message(
-        self, mqttc: mqtt.Client, user_data: Any, msg: mqtt.MQTTMessage
-    ):
+    def _on_message(self, mqttc: mqtt.Client, user_data: Any, msg: mqtt.MQTTMessage):
         logger.debug(f"payload-> {msg.payload}")
 
         msg_dict = json.loads(msg.payload.decode("utf8"))
@@ -145,7 +142,8 @@ class TuyaOpenMQ(threading.Thread):
 
         mq_config = user_data["mqConfig"]
         decrypted_data = self._decode_mq_message(
-            msg_dict["data"], mq_config.password, t)
+            msg_dict["data"], mq_config.password, t
+        )
         if decrypted_data is None:
             return
 
@@ -155,9 +153,7 @@ class TuyaOpenMQ(threading.Thread):
         for listener in self.message_listeners:
             listener(msg_dict)
 
-    def _on_subscribe(
-        self, mqttc: mqtt.Client, user_data: Any, mid, granted_qos
-    ):
+    def _on_subscribe(self, mqttc: mqtt.Client, user_data: Any, mid, granted_qos):
         logger.debug(f"_on_subscribe: {mid}")
 
     def _on_log(self, mqttc: mqtt.Client, user_data: Any, level, string):

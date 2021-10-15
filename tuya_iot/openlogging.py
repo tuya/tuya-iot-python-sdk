@@ -1,26 +1,36 @@
 """Tuya iot logging."""
 
-import logging
-from typing import Any, Dict
 import copy
+import logging
+from typing import Any
 
-logger = logging.getLogger('tuya iot')
+logger = logging.getLogger("tuya iot")
 
 default_handler = logging.StreamHandler()
-default_handler.setFormatter(logging.Formatter(
-    "[%(asctime)s] [tuya-%(module)s] %(message)s"
-))
+default_handler.setFormatter(
+    logging.Formatter("[%(asctime)s] [tuya-%(module)s] %(message)s")
+)
 
 logger.addHandler(default_handler)
 TUYA_LOGGER = logger
 
-FILTER_LIST = ["access_token", "client_id", "ip", "lat", "link_id",
-               "local_key", "lon", "password", "refresh_token", "uid"]
+FILTER_LIST = [
+    "access_token",
+    "client_id",
+    "ip",
+    "lat",
+    "link_id",
+    "local_key",
+    "lon",
+    "password",
+    "refresh_token",
+    "uid",
+]
 
 STAR = "***"
 
 
-def filter_logger(result_info: Dict[str, Any]):
+def filter_logger(result_info: dict[str, Any]):
     """Filter log, hide sensitive info."""
     if result_info is None:
         return result_info

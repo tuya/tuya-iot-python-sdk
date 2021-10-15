@@ -1,6 +1,6 @@
 """Tuya asset api."""
 
-from typing import Any, Dict, List
+from typing import Any
 
 from .openapi import TuyaOpenAPI
 
@@ -14,7 +14,7 @@ class TuyaAssetManager:
 
     """
 
-    def __init__(self, api: TuyaOpenAPI):
+    def __init__(self, api: TuyaOpenAPI) -> None:
         """Init Tuya asset manager."""
         self.api = api
 
@@ -22,7 +22,7 @@ class TuyaAssetManager:
     # Asset Management
     # https://developer.tuya.com/docs/cloud/industrial-general-asset-management/4872453fec?id=Kag2yom602i40
 
-    def get_device_list(self, asset_id: str) -> List[str]:
+    def get_device_list(self, asset_id: str) -> list[str]:
         """Get devices by asset_id.
 
         Args:
@@ -53,7 +53,7 @@ class TuyaAssetManager:
 
         return device_id_list
 
-    def get_asset_info(self, asset_id: str) -> Dict[str, Any]:
+    def get_asset_info(self, asset_id: str) -> dict[str, Any]:
         """Get asset's info.
 
         Args:
@@ -83,7 +83,9 @@ class TuyaAssetManager:
                 {
                     # "parent_asset_id": parent_asset_id,
                     "asset_id": parent_asset_id,
-                    "last_row_key": last_row_key, "page_size": 100},
+                    "last_row_key": last_row_key,
+                    "page_size": 100,
+                },
             )
             result = response.get("result", {})
             has_next = result.get("has_next", False)

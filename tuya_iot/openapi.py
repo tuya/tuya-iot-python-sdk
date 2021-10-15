@@ -6,7 +6,7 @@ import hashlib
 import hmac
 import json
 import time
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import requests
 
@@ -33,7 +33,7 @@ class TuyaTokenInfo:
         platform_url: user region platform url
     """
 
-    def __init__(self, token_response: Dict[str, Any] = None):
+    def __init__(self, token_response: dict[str, Any] = None):
         """Init TuyaTokenInfo."""
         result = token_response.get("result", {})
 
@@ -62,7 +62,7 @@ class TuyaOpenAPI:
         access_secret: str,
         auth_type: AuthType = AuthType.SMART_HOME,
         lang: str = "en",
-    ):
+    ) -> None:
         """Init TuyaOpenAPI."""
         self.session = requests.session()
 
@@ -91,9 +91,9 @@ class TuyaOpenAPI:
         self,
         method: str,
         path: str,
-        params: Optional[Dict[str, Any]] = None,
-        body: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[str, int]:
+        params: dict[str, Any] | None = None,
+        body: dict[str, Any] | None = None,
+    ) -> tuple[str, int]:
 
         # HTTPMethod
         str_to_sign = method
@@ -105,8 +105,7 @@ class TuyaOpenAPI:
         )
 
         str_to_sign += (
-            hashlib.sha256(content_to_sha256.encode(
-                "utf8")).hexdigest().lower()
+            hashlib.sha256(content_to_sha256.encode("utf8")).hexdigest().lower()
         )
         str_to_sign += "\n"
 
@@ -174,8 +173,8 @@ class TuyaOpenAPI:
         username: str = "",
         password: str = "",
         country_code: str = "",
-        schema: str = ""
-    ) -> Dict[str, Any]:
+        schema: str = "",
+    ) -> dict[str, Any]:
         """Connect to Tuya Cloud.
 
         Args:
@@ -229,9 +228,9 @@ class TuyaOpenAPI:
         self,
         method: str,
         path: str,
-        params: Optional[Dict[str, Any]] = None,
-        body: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None = None,
+        body: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
 
         self.__refresh_access_token_if_need(path)
 
@@ -281,17 +280,12 @@ class TuyaOpenAPI:
         if result.get("code", -1) == TUYA_ERROR_CODE_TOKEN_INVALID:
             self.token_info = None
             self.connect(
-                self.__username,
-                self.__password,
-                self.__country_code,
-                self.__schema
+                self.__username, self.__password, self.__country_code, self.__schema
             )
 
         return result
 
-    def get(
-        self, path: str, params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    def get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Http Get.
 
         Requests the server to return specified resources.
@@ -305,9 +299,7 @@ class TuyaOpenAPI:
         """
         return self.__request("GET", path, params, None)
 
-    def post(
-        self, path: str, body: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    def post(self, path: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
         """Http Post.
 
         Requests the server to update specified resources.
@@ -321,9 +313,7 @@ class TuyaOpenAPI:
         """
         return self.__request("POST", path, None, body)
 
-    def put(
-        self, path: str, body: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    def put(self, path: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
         """Http Put.
 
         Requires the server to perform specified operations.
@@ -337,9 +327,7 @@ class TuyaOpenAPI:
         """
         return self.__request("PUT", path, None, body)
 
-    def delete(
-        self, path: str, params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    def delete(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Http Delete.
 
         Requires the server to delete specified resources.
