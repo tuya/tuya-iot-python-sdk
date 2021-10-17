@@ -4,7 +4,7 @@ import copy
 import logging
 from typing import Any
 
-logger = logging.getLogger("tuya iot")
+logger = logging.getLogger(__package__)
 
 default_handler = logging.StreamHandler()
 default_handler.setFormatter(
