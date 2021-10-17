@@ -498,7 +498,7 @@ class TuyaDeviceManager:
     ##############################
 
 
-class DeviceManage(metaclass=abc.ABCMeta):
+class DeviceManage(metaclass=ABCMeta):
     api: TuyaOpenAPI
 
     def __init__(self, api: TuyaOpenAPI):
