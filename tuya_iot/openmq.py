@@ -23,18 +23,9 @@ CONNECT_FAILED_NOT_AUTHORISED = 5
 class TuyaMQConfig:
     """Tuya mqtt config."""
 
-    url = ""
-    client_id = ""
-    username = ""
-    password = ""
-    source_topic = {}
-    sink_topic = {}
-    expire_time = 0
-
     def __init__(self, mqConfigResponse: dict[str, Any] = {}) -> None:
         """Init TuyaMQConfig."""
         result = mqConfigResponse.get("result", {})
-
         self.url = result.get("url", "")
         self.client_id = result.get("client_id", "")
         self.username = result.get("username", "")
