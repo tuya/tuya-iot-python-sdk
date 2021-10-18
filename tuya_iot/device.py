@@ -3,7 +3,7 @@
 import time
 from abc import ABCMeta, abstractclassmethod
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Literal, Optional
 
 from .openapi import TuyaOpenAPI
 from .openlogging import logger
@@ -477,9 +477,9 @@ class TuyaDeviceManager:
         """
         return self.device_manage.get_device_specification(device_id)
 
-    def send_commands(self,
-                      device_id: str,
-                      commands: list[Dict[str, Any]]) -> dict[str, Any]:
+    def send_commands(
+        self, device_id: str, commands: list[dict[str, Any]]
+    ) -> dict[str, Any]:
 
         """Send commands.
 
@@ -497,8 +497,24 @@ class TuyaDeviceManager:
 
     ##############################
 
+    def get_device_stream_allocate(
+        self, device_id: str, stream_type: Literal["flv", "hls", "rtmp", "rtsp"]
+    ) -> Optional[str]:
+        """Get the live streaming address by device ID and the video type.
 
-class DeviceManage(metaclass=abc.ABCMeta):
+        These live streaming video protocol types are available: RTSP, HLS, FLV, and RTMP.
+
+        Args:
+          device_id(str): device id
+          stream_type(str): type of stream
+        
+        Returns:
+            None or URL to the requested stream
+        """
+        return self.device_manage.get_device_stream_allocate(device_id, stream_type)
+
+
+class DeviceManage(metaclass=ABCMeta):
     api: TuyaOpenAPI
 
     def __init__(self, api: TuyaOpenAPI):
@@ -550,6 +566,12 @@ class DeviceManage(metaclass=abc.ABCMeta):
 
     @abstractclassmethod
     def get_device_specification(self, device_id: str) -> dict[str, str]:
+        pass
+
+    @abstractclassmethod
+    def get_device_stream_allocate(
+        self, device_id: str, stream_type: Literal["flv", "hls", "rtmp", "rtsp"]
+    ) -> Optional[str]:
         pass
 
     @abstractclassmethod
@@ -613,10 +635,27 @@ class SmartHomeDeviceManage(DeviceManage):
     def get_device_specification(self, device_id: str) -> dict[str, str]:
         return self.api.get("/v1.0/devices/{}/specifications".format(device_id))
 
-    def send_commands(self, device_id: str, commands: List[dict[str, Any]]) -> dict[str, Any]:
+    def get_device_stream_allocate(
+        self, device_id: str, stream_type: Literal["flv", "hls", "rtmp", "rtsp"]
+    ) -> Optional[str]:
+        """Get the live streaming address by device ID and the video type.
 
+        These live streaming video protocol types are available: RTSP, HLS, FLV, and RTMP.
+
+        https://developer.tuya.com/en/docs/cloud/iot-video-live-stream?id=Kaiuybz0pzle4
+        """
+        response = self.api.post(
+            f"/v1.0/devices/{device_id}/stream/actions/allocate", {"type": stream_type}
+        )
+        if response["success"]:
+            return response["result"]["url"]
+        return None
+
+    def send_commands(
+        self, device_id: str, commands: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         return self.api.post(
-            "/v1.0/devices/{}/commands".format(device_id), {"commands": commands}
+            f"/v1.0/devices/{device_id}/commands", {"commands": commands}
         )
 
 
@@ -661,6 +700,15 @@ class IndustrySolutionDeviceManage(DeviceManage):
     # https://developer.tuya.com/en/docs/cloud/device-control?id=K95zu01ksols7#title-27-Get%20the%20specifications%20and%20properties%20of%20the%20device%2C%20including%20the%20instruction%20set%20and%20status%20set
     def get_device_specification(self, device_id: str) -> dict[str, str]:
         return self.api.get("/v1.0/iot-03/devices/{}/specification".format(device_id))
+
+    def get_device_stream_allocate(
+        self, device_id: str, stream_type: Literal["flv", "hls", "rtmp", "rtsp"]
+    ) -> Optional[str]:
+        """Get the live streaming address by device ID and the video type.
+
+        Not implemented for this device manager.
+        """
+        return None
 
     def send_commands(self, device_id: str, commands: list[dict[str, Any]]) -> dict[str, Any]:
 
