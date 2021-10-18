@@ -19,7 +19,6 @@ BIZCODE_NAME_UPDATE = "nameUpdate"
 BIZCODE_DPNAME_UPDATE = "dpNameUpdate"
 BIZCODE_BIND_USER = "bindUser"
 BIZCODE_DELETE = "delete"
-BIZCODE_P2P_SIGNAL = "p2pSignal"
 
 
 class TuyaDeviceFunction(SimpleNamespace):
@@ -172,8 +171,6 @@ class TuyaDeviceManager:
             self._on_device_report(data["devId"], data["status"])
         elif protocol == PROTOCOL_OTHER:
             self._on_device_other(data["devId"], data["bizCode"], data)
-        else:
-            pass
 
     def __update_device(self, device: TuyaDevice):
         for listener in self.device_listeners:
@@ -198,14 +195,14 @@ class TuyaDeviceManager:
         # bind device to user
         if biz_code == BIZCODE_BIND_USER:
             device_id = data["devId"]
-            devIds = [device_id]
+            device_ids = [device_id]
             # wait for es sync
             time.sleep(1)
 
-            self._update_device_list_info_cache(devIds)
-            self._update_device_list_status_cache(devIds)
+            self._update_device_list_info_cache(device_ids)
+            self._update_device_list_status_cache(device_ids)
 
-            self.update_device_function_cache(devIds)
+            self.update_device_function_cache(device_ids)
 
             if device_id in self.device_map.keys():
                 device = self.device_map.get(device_id)
@@ -232,19 +229,13 @@ class TuyaDeviceManager:
             del self.device_map[device_id]
             for listener in self.device_listeners:
                 listener.remove_device(device.id)
-        elif biz_code == BIZCODE_P2P_SIGNAL:
-            pass
-        else:
-            pass
 
     ##############################
     # Memory Cache
 
     def update_device_list_in_smart_home(self):
         """Update devices status in project type SmartHome."""
-        response = self.api.get(
-            "/v1.0/users/{}/devices".format(self.api.token_info.uid)
-        )
+        response = self.api.get(f"/v1.0/users/{self.api.token_info.uid}/devices")
         if response["success"]:
             for item in response["result"]:
                 device = TuyaDevice(**item)
@@ -296,7 +287,7 @@ class TuyaDeviceManager:
         """Update device function cache."""
         device_map = (
             filter(lambda d: d.id in devIds, self.device_map.values())
-            if len(devIds) > 0
+            if devIds
             else self.device_map.values()
         )
 
@@ -304,17 +295,17 @@ class TuyaDeviceManager:
             response = self.get_device_specification(device.id)
             if response.get("success"):
                 result = response.get("result", {})
-                functionMap = {}
+                function_map = {}
                 for function in result["functions"]:
                     code = function["code"]
-                    functionMap[code] = TuyaDeviceFunction(**function)
+                    function_map[code] = TuyaDeviceFunction(**function)
 
                 status_range = {}
                 for status in result["status"]:
                     code = status["code"]
                     status_range[code] = TuyaDeviceStatusRange(**status)
 
-                device.function = functionMap
+                device.function = function_map
                 device.status_range = status_range
 
     def add_device_listener(self, listener: TuyaDeviceListener):
@@ -507,7 +498,7 @@ class TuyaDeviceManager:
         Args:
           device_id(str): device id
           stream_type(str): type of stream
-        
+
         Returns:
             None or URL to the requested stream
         """
@@ -584,12 +575,12 @@ class SmartHomeDeviceManage(DeviceManage):
         pass
 
     def get_device_info(self, device_id: str) -> dict[str, Any]:
-        response = self.api.get("/v1.0/devices/{}".format(device_id))
+        response = self.api.get(f"/v1.0/devices/{device_id}")
         response["result"].pop("status")
         return response
 
-    def get_device_list_info(self, devIds: list[str]) -> dict[str, Any]:
-        response = self.api.get("/v1.0/devices/", {"device_ids": ",".join(devIds)})
+    def get_device_list_info(self, device_ids: list[str]) -> dict[str, Any]:
+        response = self.api.get("/v1.0/devices/", {"device_ids": ",".join(device_ids)})
         if response["success"]:
             for info in response["result"]["devices"]:
                 info.pop("status")
@@ -597,12 +588,12 @@ class SmartHomeDeviceManage(DeviceManage):
         return response
 
     def get_device_status(self, device_id: str) -> dict[str, Any]:
-        response = self.api.get("/v1.0/devices/{}".format(device_id))
+        response = self.api.get(f"/v1.0/devices/{device_id}")
         response["result"] = response["result"]["status"]
         return response
 
-    def get_device_list_status(self, devIds: list[str]) -> dict[str, Any]:
-        response = self.api.get("/v1.0/devices/", {"device_ids": ",".join(devIds)})
+    def get_device_list_status(self, device_ids: list[str]) -> dict[str, Any]:
+        response = self.api.get("/v1.0/devices/", {"device_ids": ",".join(device_ids)})
         status_list = []
         if response["success"]:
             for info in response["result"]["devices"]:
@@ -617,23 +608,23 @@ class SmartHomeDeviceManage(DeviceManage):
         )
 
     def factory_reset(self, device_id: str) -> dict[str, Any]:
-        return self.api.post("/v1.0/devices/{}/reset-factory".format(device_id))
+        return self.api.post(f"/v1.0/devices/{device_id}/reset-factory")
 
     def remove_device(self, device_id: str) -> dict[str, Any]:
-        return self.api.delete("/v1.0/devices/{}".format(device_id))
+        return self.api.delete(f"/v1.0/devices/{device_id}")
 
     def remove_device_list(self, devIds: list[str]) -> dict[str, Any]:
         raise Exception("Api not support.")
 
     def get_device_functions(self, device_id: str) -> dict[str, Any]:
-        return self.api.get("/v1.0/devices/{}/functions".format(device_id))
+        return self.api.get(f"/v1.0/devices/{device_id}/functions")
 
     def get_category_functions(self, categoryId: str) -> dict[str, Any]:
-        return self.api.get("/v1.0/functions/{}".format(categoryId))
+        return self.api.get(f"/v1.0/functions/{categoryId}")
 
     # https://developer.tuya.com/en/docs/cloud/device-control?id=K95zu01ksols7#title-27-Get%20the%20specifications%20and%20properties%20of%20the%20device%2C%20including%20the%20instruction%20set%20and%20status%20set
     def get_device_specification(self, device_id: str) -> dict[str, str]:
-        return self.api.get("/v1.0/devices/{}/specifications".format(device_id))
+        return self.api.get(f"/v1.0/devices/{device_id}/specifications")
 
     def get_device_stream_allocate(
         self, device_id: str, stream_type: Literal["flv", "hls", "rtmp", "rtsp"]
@@ -664,13 +655,15 @@ class IndustrySolutionDeviceManage(DeviceManage):
         pass
 
     def get_device_info(self, device_id: str) -> dict[str, Any]:
-        return self.api.get("/v1.0/iot-03/devices/{}".format(device_id))
+        return self.api.get(f"/v1.0/iot-03/devices/{device_id}")
 
-    def get_device_list_info(self, devIds: list[str]) -> dict[str, Any]:
-        return self.api.get("/v1.0/iot-03/devices", {"device_ids": ",".join(devIds)})
+    def get_device_list_info(self, device_ids: list[str]) -> dict[str, Any]:
+        return self.api.get(
+            "/v1.0/iot-03/devices", {"device_ids": ",".join(device_ids)}
+        )
 
     def get_device_status(self, device_id: str) -> dict[str, Any]:
-        return self.api.get("/v1.0/iot-03/devices/{}/status".format(device_id))
+        return self.api.get(f"/v1.0/iot-03/devices/{device_id}/status")
 
     def get_device_list_status(self, devIds: list[str]) -> dict[str, Any]:
         return self.api.get(
@@ -681,25 +674,25 @@ class IndustrySolutionDeviceManage(DeviceManage):
         return self.api.get("/v1.0/iot-03/devices/factory-infos", device_id)
 
     def factory_reset(self, device_id: str) -> dict[str, Any]:
-        return self.api.delete(
-            "/v1.0/iot-03/devices/{}/actions/reset".format(device_id)
-        )
+        return self.api.delete(f"/v1.0/iot-03/devices/{device_id}/actions/reset")
 
     def remove_device(self, device_id: str) -> dict[str, Any]:
-        return self.api.delete("/v1.0/iot-03/devices/{}".format(device_id))
+        return self.api.delete(f"/v1.0/iot-03/devices/{device_id}")
 
-    def remove_device_list(self, devIds: list[str]) -> dict[str, Any]:
-        return self.api.delete("/v1.0/iot-03/devices", {"device_ids": ",".join(devIds)})
+    def remove_device_list(self, device_ids: list[str]) -> dict[str, Any]:
+        return self.api.delete(
+            "/v1.0/iot-03/devices", {"device_ids": ",".join(device_ids)}
+        )
 
     def get_device_functions(self, device_id: str) -> dict[str, Any]:
-        return self.api.get("/v1.0/iot-03/devices/{}/functions".format(device_id))
+        return self.api.get(f"/v1.0/iot-03/devices/{device_id}/functions")
 
     def get_category_functions(self, categoryId: str) -> dict[str, Any]:
-        return self.api.get("/v1.0/iot-03/categories/{}/functions".format(categoryId))
+        return self.api.get(f"/v1.0/iot-03/categories/{categoryId}/functions")
 
     # https://developer.tuya.com/en/docs/cloud/device-control?id=K95zu01ksols7#title-27-Get%20the%20specifications%20and%20properties%20of%20the%20device%2C%20including%20the%20instruction%20set%20and%20status%20set
     def get_device_specification(self, device_id: str) -> dict[str, str]:
-        return self.api.get("/v1.0/iot-03/devices/{}/specification".format(device_id))
+        return self.api.get(f"/v1.0/iot-03/devices/{device_id}/specification")
 
     def get_device_stream_allocate(
         self, device_id: str, stream_type: Literal["flv", "hls", "rtmp", "rtsp"]
@@ -710,8 +703,10 @@ class IndustrySolutionDeviceManage(DeviceManage):
         """
         return None
 
-    def send_commands(self, device_id: str, commands: list[dict[str, Any]]) -> dict[str, Any]:
+    def send_commands(
+        self, device_id: str, commands: list[dict[str, Any]]
+    ) -> dict[str, Any]:
 
         return self.api.post(
-            "/v1.0/iot-03/devices/{}/commands".format(device_id), {"commands": commands}
+            f"/v1.0/iot-03/devices/{device_id}/commands", {"commands": commands}
         )

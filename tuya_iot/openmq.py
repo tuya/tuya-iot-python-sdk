@@ -7,6 +7,7 @@ import time
 import uuid
 from typing import Any, Callable
 from urllib.parse import urlsplit
+from typing import Optional
 
 from Crypto.Cipher import AES
 from paho.mqtt import client as mqtt
@@ -15,7 +16,7 @@ from .openapi import TuyaOpenAPI
 from .openlogging import logger
 from .tuya_enums import AuthType
 
-LINK_ID = "tuya-iot-app-sdk-python.{}".format(uuid.uuid1())
+LINK_ID = f"tuya-iot-app-sdk-python.{uuid.uuid1()}"
 GCM_TAG_LENGTH = 16
 CONNECT_FAILED_NOT_AUTHORISED = 5
 
@@ -53,7 +54,7 @@ class TuyaOpenMQ(threading.Thread):
         self.mq_config = None
         self.message_listeners = set()
 
-    def _get_mqtt_config(self) -> TuyaMQConfig:
+    def _get_mqtt_config(self) -> Optional[TuyaMQConfig]:
         response = self.api.post(
             "/v1.0/iot-03/open-hub/access-config",
             {
@@ -123,11 +124,6 @@ class TuyaOpenMQ(threading.Thread):
         logger.debug(f"payload-> {msg.payload}")
 
         msg_dict = json.loads(msg.payload.decode("utf8"))
-
-        # topic = msg.topic
-        # protocol = msg_dict.get("protocol", 0)
-        # pv = msg_dict.get("pv", "")
-        # data = msg_dict.get("data", "")
 
         t = msg_dict.get("t", "")
 

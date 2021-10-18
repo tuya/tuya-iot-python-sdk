@@ -118,11 +118,8 @@ class TuyaOpenAPI:
         if params is not None and len(params.keys()) > 0:
             str_to_sign += "?"
 
-            query_builder = ""
             params_keys = sorted(params.keys())
-
-            for key in params_keys:
-                query_builder += f"{key}={params[key]}&"
+            query_builder = "".join(f"{key}={params[key]}&" for key in params_keys)
             str_to_sign += query_builder[:-1]
 
         # Sign
@@ -234,10 +231,7 @@ class TuyaOpenAPI:
 
         self.__refresh_access_token_if_need(path)
 
-        access_token = ""
-        if self.token_info:
-            access_token = self.token_info.access_token
-
+        access_token = self.token_info.access_token if self.token_info else ""
         sign, t = self._calculate_sign(method, path, params, body)
         headers = {
             "client_id": self.access_id,

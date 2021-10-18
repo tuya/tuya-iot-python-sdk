@@ -1,14 +1,14 @@
 """Tuya home's api base on asset and device api."""
 
-from typing import Any
 from types import SimpleNamespace
+from typing import Any
 
-from .openapi import TuyaOpenAPI
-from .openmq import TuyaOpenMQ
-from .tuya_enums import AuthType
 from .asset import TuyaAssetManager
 from .device import TuyaDeviceManager
 from .infrared import TuyaRemote, TuyaRemoteDevice, TuyaRemoteDeviceKey
+from .openapi import TuyaOpenAPI
+from .openmq import TuyaOpenMQ
+from .tuya_enums import AuthType
 
 
 class TuyaScene(SimpleNamespace):
@@ -52,7 +52,7 @@ class TuyaHomeManager:
             # for asset in assets:
             #     asset_id = asset["asset_id"]
             #     device_ids += asset_manager.get_device_list(asset_id)
-            if len(device_ids) > 0:
+            if device_ids:
                 self.device_manager.update_device_caches(device_ids)
         elif self.api.auth_type == AuthType.SMART_HOME:
             self.device_manager.update_device_list_in_smart_home()
@@ -74,14 +74,14 @@ class TuyaHomeManager:
 
         response = self.api.get(f"/v1.0/users/{self.api.token_info.uid}/homes")
         if response.get("success", False):
-            homes = response.get("result")
+            homes = response.get("result", [])
             scenes = []
             for home in homes:
                 home_id = home["home_id"]
                 scenes_response = self.api.get(f"/v1.0/homes/{home_id}/scenes")
 
                 if scenes_response.get("success", False):
-                    for scene in scenes_response.get("result"):
+                    for scene in scenes_response.get("result", []):
                         __tuya_scene = TuyaScene(**scene)
                         __tuya_scene.home_id = home_id
                         scenes.append(__tuya_scene)
@@ -102,10 +102,11 @@ class TuyaHomeManager:
         if self.api.auth_type == AuthType.CUSTOM:
             return []
 
-        remote_ids = []
-        for (device_id, device) in self.device_manager.device_map.items():
-            if device.category == "qt":
-                remote_ids.append(device_id)
+        remote_ids = [
+            device_id
+            for (device_id, device) in self.device_manager.device_map.items()
+            if device.category == "qt"
+        ]
 
         remotes = []
         for remote_id in remote_ids:
@@ -113,7 +114,7 @@ class TuyaHomeManager:
             if not remotes_response.get("success", False):
                 continue
 
-            remote_device_response = remotes_response.get("result")
+            remote_device_response = remotes_response.get("result", [])
 
             remote_devices = []
             for remote_device in remote_device_response:
@@ -129,19 +130,17 @@ class TuyaHomeManager:
                     continue
 
                 keys_result = keys_response.get("result")
-                key_values = keys_result.get("key_list")
+                key_values = keys_result.get("key_list", [])
 
-                tuya_remote_device_keys = []
-                for tuya_key in key_values:
-                    tuya_remote_device_keys.append(
-                        TuyaRemoteDeviceKey(
-                            tuya_key["key"],
-                            tuya_key["key_id"],
-                            tuya_key["key_name"],
-                            tuya_key["standard_key"],
-                        )
+                tuya_remote_device_keys = [
+                    TuyaRemoteDeviceKey(
+                        tuya_key["key"],
+                        tuya_key["key_id"],
+                        tuya_key["key_name"],
+                        tuya_key["standard_key"],
                     )
-
+                    for tuya_key in key_values
+                ]
                 remote_devices.append(
                     TuyaRemoteDevice(remote_device, tuya_remote_device_keys)
                 )
@@ -157,6 +156,6 @@ class TuyaHomeManager:
             return []
 
         self.api.post(
-            "/v1.0/infrareds/{}/remotes/{}/command".format(remote_id, device_id),
+            f"/v1.0/infrareds/{remote_id}/remotes/{device_id}/command",
             {"key": key},
         )

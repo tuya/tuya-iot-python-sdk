@@ -10,8 +10,6 @@ class TuyaAssetManager:
 
     Attributes:
       api: tuya openapi
-
-
     """
 
     def __init__(self, api: TuyaOpenAPI) -> None:
@@ -31,7 +29,7 @@ class TuyaAssetManager:
         Returns:
           A list of device ids.
         """
-        device_id_list = []
+        device_id_list: list[str] = []
 
         has_next = True
         last_row_key = ""
@@ -43,9 +41,9 @@ class TuyaAssetManager:
             result = response.get("result", {})
             has_next = result.get("has_next", False)
             last_row_key = result.get("last_row_key", "")
-            totalSize = result.get("total_size", 0)
+            total_size = result.get("total_size", 0)
 
-            if len(device_id_list) > totalSize:  # Error
+            if len(device_id_list) > total_size:  # Error
                 raise Exception("get_device_list error, too many devices.")
 
             for item in result.get("list", []):
@@ -62,7 +60,7 @@ class TuyaAssetManager:
         Returns:
             asset's info
         """
-        return self.api.get("/v1.0/iot-02/assets/{}".format(asset_id))
+        return self.api.get(f"/v1.0/iot-02/assets/{asset_id}")
 
     def get_asset_list(self, parent_asset_id: str = "-1") -> list:
         """Get under-nodes unser the current node.
