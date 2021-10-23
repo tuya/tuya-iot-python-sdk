@@ -1,4 +1,5 @@
 """Tuya Open IOT HUB which base on MQTT."""
+from __future__ import annotations
 
 import base64
 import json

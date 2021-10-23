@@ -1,5 +1,4 @@
 """Tuya Open API."""
-
 from __future__ import annotations
 
 import hashlib
@@ -248,7 +247,9 @@ class TuyaOpenAPI:
             headers["dev_channel"] = self.dev_channel
 
         if self.token_info is not None:
-            refresh_token_api = TO_C_REFRESH_TOKEN_API.format(self.token_info.refresh_token)
+            refresh_token_api = TO_C_REFRESH_TOKEN_API.format(
+                self.token_info.refresh_token
+            )
             if refresh_token_api == path:
                 headers["dev_lang"] = "python"
                 headers["dev_version"] = VERSION
