@@ -1,4 +1,5 @@
 """Tuya device api."""
+from __future__ import annotations
 
 import time
 from abc import ABCMeta, abstractclassmethod
@@ -641,6 +642,8 @@ class SmartHomeDeviceManage(DeviceManage):
         if response["success"]:
             return response["result"]["url"]
         return None
+
+    def get_device_statistics_
 
     def send_commands(
         self, device_id: str, commands: list[dict[str, Any]]
