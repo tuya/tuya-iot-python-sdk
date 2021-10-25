@@ -643,8 +643,6 @@ class SmartHomeDeviceManage(DeviceManage):
             return response["result"]["url"]
         return None
 
-    def get_device_statistics_
-
     def send_commands(
         self, device_id: str, commands: list[dict[str, Any]]
     ) -> dict[str, Any]:

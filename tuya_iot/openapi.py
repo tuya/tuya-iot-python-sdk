@@ -15,7 +15,7 @@ from .version import VERSION
 
 TUYA_ERROR_CODE_TOKEN_INVALID = 1010
 
-TO_C_REFRESH_TOKEN_API = "/v1.0/iot-03/users/token/{}"
+TO_C_REFRESH_TOKEN_API_PRE = "/v1.0/iot-03/users/token/"
 
 TO_C_CUSTOM_TOKEN_API = "/v1.0/iot-03/users/login"
 TO_C_SMART_HOME_TOKEN_API = "/v1.0/iot-01/associated-users/actions/authorized-login"
@@ -155,7 +155,7 @@ class TuyaOpenAPI:
 
         self.token_info.access_token = ""
         response = self.post(
-            TO_C_REFRESH_TOKEN_API.format(self.token_info.refresh_token)
+            TO_C_REFRESH_TOKEN_API_PRE + self.token_info.refresh_token
         )
 
         self.token_info = TuyaTokenInfo(response)
@@ -241,19 +241,10 @@ class TuyaOpenAPI:
             "lang": self.lang,
         }
 
-        if self.__login_path == path == path:
+        if path == self.__login_path or path.startswith(TO_C_REFRESH_TOKEN_API_PRE):
             headers["dev_lang"] = "python"
             headers["dev_version"] = VERSION
             headers["dev_channel"] = self.dev_channel
-
-        if self.token_info is not None:
-            refresh_token_api = TO_C_REFRESH_TOKEN_API.format(
-                self.token_info.refresh_token
-            )
-            if refresh_token_api == path:
-                headers["dev_lang"] = "python"
-                headers["dev_version"] = VERSION
-                headers["dev_channel"] = self.dev_channel
 
         logger.debug(
             f"Request: method = {method}, \
