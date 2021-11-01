@@ -9,10 +9,10 @@ from tuya_iot import (
     TuyaDeviceListener,
     TuyaDevice,
     TuyaTokenInfo,
-    tuya_logger
+    TUYA_LOGGER
 )
 
-tuya_logger.setLevel(logging.DEBUG)
+TUYA_LOGGER.setLevel(logging.DEBUG)
 # Init
 openapi = TuyaOpenAPI(ENDPOINT, ACCESS_ID, ACCESS_KEY, AuthType.CUSTOM)
 
