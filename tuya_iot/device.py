@@ -4,7 +4,14 @@ from __future__ import annotations
 import time
 from abc import ABCMeta, abstractclassmethod
 from types import SimpleNamespace
-from typing import Any, Literal, Optional
+from typing import Any, Optional
+
+try:
+    # Python 3.8 and later
+    from typing import Literal
+except ImportError:
+    # Python 3.7 and lower
+    from typing_extensions import Literal
 
 from .openapi import TuyaOpenAPI
 from .openlogging import logger
