@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import time
-from abc import ABCMeta, abstractclassmethod
+from abc import ABCMeta, abstractmethod
 from types import SimpleNamespace
 from typing import Any, Literal, Optional
 
@@ -111,7 +111,7 @@ class TuyaDevice(SimpleNamespace):
 class TuyaDeviceListener(metaclass=ABCMeta):
     """Tuya device listener."""
 
-    @abstractclassmethod
+    @abstractmethod
     def update_device(self, device: TuyaDevice):
         """Update device info.
 
@@ -120,7 +120,7 @@ class TuyaDeviceListener(metaclass=ABCMeta):
         """
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def add_device(self, device: TuyaDevice):
         """Device Added.
 
@@ -129,7 +129,7 @@ class TuyaDeviceListener(metaclass=ABCMeta):
         """
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def remove_device(self, device_id: str):
         """Device removed.
 
@@ -512,61 +512,61 @@ class DeviceManage(metaclass=ABCMeta):
     def __init__(self, api: TuyaOpenAPI):
         self.api = api
 
-    @abstractclassmethod
+    @abstractmethod
     def update_device_caches(self, devIds: list[str]):
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def get_device_info(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def get_device_list_info(self, devIds: list[str]) -> dict[str, Any]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def get_device_status(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def get_device_list_status(self, devIds: list[str]) -> dict[str, Any]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def get_factory_info(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def factory_reset(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def remove_device(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def remove_device_list(self, devIds: list[str]) -> dict[str, Any]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def get_device_functions(self, device_id: str) -> dict[str, Any]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def get_category_functions(self, categoryId: str) -> dict[str, Any]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def get_device_specification(self, device_id: str) -> dict[str, str]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def get_device_stream_allocate(
         self, device_id: str, stream_type: Literal["flv", "hls", "rtmp", "rtsp"]
     ) -> Optional[str]:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def send_commands(self, device_id: str, commands: list[str]) -> dict[str, Any]:
         pass
 
