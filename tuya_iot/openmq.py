@@ -13,13 +13,16 @@ from typing import Optional
 from Crypto.Cipher import AES
 from paho.mqtt import client as mqtt
 
-from .openapi import TuyaOpenAPI
+from .openapi import TO_C_SMART_HOME_REFRESH_TOKEN_API, TuyaOpenAPI
 from .openlogging import logger
 from .tuya_enums import AuthType
 
 LINK_ID = f"tuya-iot-app-sdk-python.{uuid.uuid1()}"
 GCM_TAG_LENGTH = 16
 CONNECT_FAILED_NOT_AUTHORISED = 5
+
+TO_C_CUSTOM_MQTT_CONFIG_API = "/v1.0/iot-03/open-hub/access-config"
+TO_C_SMART_HOME_MQTT_CONFIG_API = "/v1.0/open-hub/access/config"
 
 
 class TuyaMQConfig:
@@ -57,7 +60,9 @@ class TuyaOpenMQ(threading.Thread):
 
     def _get_mqtt_config(self) -> Optional[TuyaMQConfig]:
         response = self.api.post(
-            "/v1.0/iot-03/open-hub/access-config",
+            TO_C_CUSTOM_MQTT_CONFIG_API
+            if (self.api.auth_type == AuthType.CUSTOM)
+            else TO_C_SMART_HOME_MQTT_CONFIG_API,
             {
                 "uid": self.api.token_info.uid,
                 "link_id": LINK_ID,
@@ -89,16 +94,16 @@ class TuyaOpenMQ(threading.Thread):
 
             # get iv buffer
             iv_length = int.from_bytes(buffer[0:4], byteorder="big")
-            iv_buffer = buffer[4 : iv_length + 4]
+            iv_buffer = buffer[4: iv_length + 4]
 
             # get data buffer
-            data_buffer = buffer[iv_length + 4 : len(buffer) - GCM_TAG_LENGTH]
+            data_buffer = buffer[iv_length + 4: len(buffer) - GCM_TAG_LENGTH]
 
             # aad
             aad_buffer = str(t).encode("utf8")
 
             # tag
-            tag_buffer = buffer[len(buffer) - GCM_TAG_LENGTH :]
+            tag_buffer = buffer[len(buffer) - GCM_TAG_LENGTH:]
 
             cipher = AES.new(key.encode("utf8"), AES.MODE_GCM, nonce=iv_buffer)
             cipher.update(aad_buffer)

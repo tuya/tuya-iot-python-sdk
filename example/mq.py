@@ -1,13 +1,14 @@
 import logging
-from tuya_iot import TuyaOpenAPI, TuyaOpenMQ, tuya_logger
+from tuya_iot import TuyaOpenAPI, TuyaOpenMQ, TUYA_LOGGER
 
 from env import ENDPOINT, ACCESS_ID, ACCESS_KEY, USERNAME, PASSWORD
 
-tuya_logger.setLevel(logging.DEBUG)
+
+TUYA_LOGGER.setLevel(logging.DEBUG)
 
 # Init
 openapi = TuyaOpenAPI(ENDPOINT, ACCESS_ID, ACCESS_KEY)
-openapi.connect(USERNAME, PASSWORD)
+openapi.connect(USERNAME, PASSWORD, "86", 'tuyaSmart')
 
 
 # Receive device message
