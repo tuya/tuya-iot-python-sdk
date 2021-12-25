@@ -62,10 +62,6 @@ deviceManager.add_device_listener(tuyaDeviceListener())
 flag = True
 while True:
     input()
-    # flag = not flag
-    # commands = {'commands': [{'code': 'switch_led', 'value': flag}]}
-    response = openapi.post(
-        "/v1.0/iot-03/users/token/{}".format(openapi.token_info.refresh_token)
-    )
-    openapi.token_info = TuyaTokenInfo(response)
-    # openapi.post('/v1.0/iot-03/devices/{}/commands'.format(DEVICE_ID), commands)
+    flag = not flag
+    commands = {'commands': [{'code': 'switch_led', 'value': flag}]}
+    openapi.post('/v1.0/iot-03/devices/{}/commands'.format(DEVICE_ID), commands)

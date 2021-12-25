@@ -10,11 +10,11 @@ TUYA_LOGGER.setLevel(logging.DEBUG)
 openapi = TuyaOpenAPI(ENDPOINT, ACCESS_ID, ACCESS_KEY)
 openapi.connect(USERNAME, PASSWORD, "86", 'tuyaSmart')
 
-
 # Receive device message
 def on_message(msg):
     print("on_message: %s" % msg)
 
+openapi.token_info.expire_time = 0
 
 openmq = TuyaOpenMQ(openapi)
 openmq.start()
