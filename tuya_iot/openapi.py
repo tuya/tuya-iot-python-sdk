@@ -16,7 +16,7 @@ from .version import VERSION
 TUYA_ERROR_CODE_TOKEN_INVALID = 1010
 
 TO_C_CUSTOM_REFRESH_TOKEN_API = "/v1.0/iot-03/users/token/"
-TO_C_SMART_HOME_REFRESH_TOKEN_API = "v1.0/token"
+TO_C_SMART_HOME_REFRESH_TOKEN_API = "/v1.0/token/"
 
 TO_C_CUSTOM_TOKEN_API = "/v1.0/iot-03/users/login"
 TO_C_SMART_HOME_TOKEN_API = "/v1.0/iot-01/associated-users/actions/authorized-login"
@@ -161,7 +161,7 @@ class TuyaOpenAPI:
                 TO_C_CUSTOM_REFRESH_TOKEN_API + self.token_info.refresh_token
             )
         else:
-            response = self.post(
+            response = self.get(
                 TO_C_SMART_HOME_REFRESH_TOKEN_API + self.token_info.refresh_token
             )
 
