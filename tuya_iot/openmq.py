@@ -12,6 +12,7 @@ from typing import Optional
 
 from Crypto.Cipher import AES
 from paho.mqtt import client as mqtt
+from requests.exceptions import RequestException
 
 from .openapi import TO_C_SMART_HOME_REFRESH_TOKEN_API, TuyaOpenAPI
 from .openlogging import logger
@@ -162,7 +163,8 @@ class TuyaOpenMQ(threading.Thread):
 
                 # reconnect every 2 hours required.
                 time.sleep(self.mq_config.expire_time - 60)
-            except:
+            except RequestException as e:
+                logger.exception(e)
                 logger.error(f"failed to refresh mqtt server, retrying in {backoff_seconds} seconds.")
 
                 time.sleep(backoff_seconds)
