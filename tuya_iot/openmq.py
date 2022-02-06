@@ -154,11 +154,20 @@ class TuyaOpenMQ(threading.Thread):
 
     def run(self):
         """Method representing the thread's activity which should not be used directly."""
+        backoff_seconds = 1
         while not self._stop_event.is_set():
-            self.__run_mqtt()
+            try:
+                self.__run_mqtt()
+                backoff_seconds = 1
 
-            # reconnect every 2 hours required.
-            time.sleep(self.mq_config.expire_time - 60)
+                # reconnect every 2 hours required.
+                time.sleep(self.mq_config.expire_time - 60)
+            except:
+                logger.error(f"failed to refresh mqtt server, retrying in {backoff_seconds} seconds.")
+
+                time.sleep(backoff_seconds)
+                backoff_seconds = min(backoff_seconds * 2 , 60) # Try at most every 60 seconds to refresh
+
 
     def __run_mqtt(self):
         mq_config = self._get_mqtt_config()
