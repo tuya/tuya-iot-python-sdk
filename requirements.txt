@@ -2,3 +2,4 @@ paho-mqtt
 requests
 pycryptodome
 websocket-client
+typing-extensions; python_version < '3.8'
