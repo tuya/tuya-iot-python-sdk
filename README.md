@@ -88,7 +88,7 @@ With diversified devices and industries, Tuya Cloud Development Platform opens b
 
 ### Registration
 
-Please check [Tuya IoT Platform Configuration Guide](https://developer.tuya.com/en/docs/iot/Configuration_Guide_custom?id=Kamcfx6g5uyot) to register an account on the [Tuya IoT Platform](https://iot.tuya.com?_source=github), and get the required information. You need to create a Cloud project and complete the configuration of asset, user, and application. Then, you will get the **username**, **password**, **Access ID**, and **Access Secret**.
+Please check [Tuya IoT Platform Configuration Guide](https://developer.tuya.com/en/docs/iot/Platform_Configuration_smarthome?id=Kamcgamwoevrx) to register an account on the [Tuya IoT Platform](https://iot.tuya.com?_source=github), and get the required information. You need to create a Cloud project and complete the configuration of asset, user, and application. Then, you will get the **username**, **password**, **Access ID**, and **Access Secret**.
 
 ## Usage
 
