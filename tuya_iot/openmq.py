@@ -59,6 +59,7 @@ class TuyaOpenMQ(threading.Thread):
         self.mq_config = None
         self.message_listeners = set()
 
+    # https://developer.tuya.com/en/docs/cloud/c2c2630d7c?id=Kb68mozbi3foh
     def _get_mqtt_config(self) -> Optional[TuyaMQConfig]:
         response = self.api.post(
             TO_C_CUSTOM_MQTT_CONFIG_API
@@ -160,7 +161,6 @@ class TuyaOpenMQ(threading.Thread):
             try:
                 self.__run_mqtt()
                 backoff_seconds = 1
-
                 # reconnect every 2 hours required.
                 time.sleep(self.mq_config.expire_time - 60)
             except RequestException as e:
@@ -175,6 +175,8 @@ class TuyaOpenMQ(threading.Thread):
         mq_config = self._get_mqtt_config()
         if mq_config is None:
             logger.error("error while get mqtt config")
+            if self.mq_config is None:  # if we have no initial mq_config this is a big problem.
+                raise RequestException()
             return
 
         self.mq_config = mq_config
