@@ -62,9 +62,16 @@ class TuyaOpenAPI:
         access_secret: str,
         auth_type: AuthType = AuthType.SMART_HOME,
         lang: str = "en",
+        pool_connections: int = 10,
+        pool_maxsize: int = 10,
     ) -> None:
         """Init TuyaOpenAPI."""
         self.session = requests.session()
+        self.adapter = requests.adapters.HTTPAdapter(
+            pool_connections=pool_connections,
+            pool_maxsize=pool_maxsize
+        )
+        self.session.mount("https://", self.adapter)
 
         self.endpoint = endpoint
         self.access_id = access_id
