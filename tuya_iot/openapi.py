@@ -64,12 +64,14 @@ class TuyaOpenAPI:
         lang: str = "en",
         pool_connections: int = 10,
         pool_maxsize: int = 10,
+        max_retries: int = 3 
     ) -> None:
         """Init TuyaOpenAPI."""
         self.session = requests.session()
         self.adapter = requests.adapters.HTTPAdapter(
-            pool_connections=pool_connections,
-            pool_maxsize=pool_maxsize
+            pool_connections = pool_connections,
+            pool_maxsize = pool_maxsize,
+            max_retries = max_retries
         )
         self.session.mount("https://", self.adapter)
 
