@@ -38,8 +38,8 @@ class TuyaTokenInfo:
         result = token_response.get("result", {})
 
         self.expire_time = (
-            token_response.get("t", 0)
-            + result.get("expire", result.get("expire_time", 0)) * 1000
+            int(token_response.get("t", 0))
+            + int(result.get("expire", result.get("expire_time", 0))) * 1000
         )
         self.access_token = result.get("access_token", "")
         self.refresh_token = result.get("refresh_token", "")
