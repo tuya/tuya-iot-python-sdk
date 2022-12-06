@@ -174,17 +174,21 @@ class TuyaOpenMQ(threading.Thread):
     def __run_mqtt(self):
         mq_config = self._get_mqtt_config()
         if mq_config is None:
-            logger.error("error while get mqtt config")
-            return
+            logger.error("error while get mqtt config, trying to reconnect")
+            self.api.force_reconnect()
+            mq_config = self._get_mqtt_config()
 
-        self.mq_config = mq_config
+        if mq_config is None:
+            logger.error("permanent error while get mqtt config")
+        else:
+            self.mq_config = mq_config
 
-        logger.debug(f"connecting {mq_config.url}")
-        mqttc = self._start(mq_config)
+            logger.debug(f"connecting {mq_config.url}")
+            mqttc = self._start(mq_config)
 
-        if self.client:
-            self.client.disconnect()
-        self.client = mqttc
+            if self.client:
+                self.client.disconnect()
+            self.client = mqttc
 
     def _start(self, mq_config: TuyaMQConfig) -> mqtt.Client:
         mqttc = mqtt.Client(mq_config.client_id)
