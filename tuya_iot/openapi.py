@@ -227,6 +227,12 @@ class TuyaOpenAPI:
         """Is connect to tuya cloud."""
         return self.token_info is not None and len(self.token_info.access_token) > 0
 
+    def force_reconnect(self) -> bool:
+        self.connect(
+            self.__username, self.__password, self.__country_code, self.__schema
+        )
+        return self.is_connect()
+
     def __request(
         self,
         method: str,
